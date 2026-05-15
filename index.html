@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Triage Assistant | Premium</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-blur circle-1"></div>
+    <div class="bg-blur circle-2"></div>
+    <div class="bg-blur circle-3"></div>
+
+    <header class="header glass-panel">
+        <div class="header-content">
+            <div class="logo">
+                <img src="file:///C:/Users/user/.gemini/antigravity/brain/c3dd78d4-3e24-4a98-ab61-3a8ee9a7b81a/triage_hero_bg_1778861193916.png" alt="AI Medical Logo" class="hero-img">
+            </div>
+            <div class="header-text">
+                <h1>AI Triage Assistant</h1>
+                <p>Advanced Clinical Decision Support System</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="wizard-container" class="glass-panel">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            
+            <form id="triage-form">
+                <!-- Paso 1: Evaluacion General -->
+                <div class="step active" id="step-1">
+                    <h2>🧠 Evaluación Neurológica & Respiratoria</h2>
+                    
+                    <div class="form-group">
+                        <label for="conciencia">Estado de Conciencia</label>
+                        <select id="conciencia" required>
+                            <option value="" disabled selected>Seleccione el estado...</option>
+                            <option value="alerta">Alerta y Orientado</option>
+                            <option value="confuso">Confuso / Desorientado</option>
+                            <option value="inconsciente">Inconsciente / No responde</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equilibrio">Equilibrio y Visión</label>
+                        <select id="equilibrio" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="normal">Normal</option>
+                            <option value="perdida">Pérdida repentina de equilibrio o visión</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="respiracion">Dificultad Respiratoria</label>
+                        <select id="respiracion" required>
+                            <option value="" disabled selected>Seleccione el estado...</option>
+                            <option value="no">Respiración Normal</option>
+                            <option value="si">Dificultad Severa / Asfixia</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="nextStep(1, 2)">Continuar Evaluación <span>&rarr;</span></button>
+                </div>
+
+                <!-- Paso 2: Cardio y Vitales -->
+                <div class="step" id="step-2">
+                    <h2>🫀 Constantes Vitales y Dolor</h2>
+                    
+                    <div class="form-group">
+                        <label for="temperatura">Temperatura Corporal</label>
+                        <select id="temperatura" required>
+                            <option value="" disabled selected>Seleccione la temperatura...</option>
+                            <option value="normal">Normal (36.5 - 37.5°C)</option>
+                            <option value="fiebre">Fiebre (> 38.0°C)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="presion">Presión Arterial</label>
+                        <select id="presion" required>
+                            <option value="" disabled selected>Seleccione la presión...</option>
+                            <option value="normal">Normal / Estable</option>
+                            <option value="baja">Baja (Hipotensión)</option>
+                            <option value="alta">Alta (Hipertensión)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dolor_pecho">Dolor en Pecho o Brazo Izquierdo</label>
+                        <select id="dolor_pecho" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="no">Ninguno / Otro tipo de dolor</option>
+                            <option value="si">Sí, dolor opresivo irradiado</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="nextStep(2, 1)"><span>&larr;</span> Anterior</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(2, 3)">Continuar Evaluación <span>&rarr;</span></button>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Síntomas Específicos -->
+                <div class="step" id="step-3">
+                    <h2>🦠 Síntomas Específicos</h2>
+                    
+                    <div class="form-group">
+                        <label for="tos">Tos y Vías Respiratorias</label>
+                        <select id="tos" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="ninguna">Ninguna tos</option>
+                            <option value="seca">Tos seca</option>
+                            <option value="flema">Tos persistente con flema</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="digestivo">Problemas Digestivos</label>
+                        <select id="digestivo" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="ninguno">Ninguno</option>
+                            <option value="nauseas">Náuseas, Vómitos o Diarrea</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="nextStep(3, 2)"><span>&larr;</span> Anterior</button>
+                        <button type="button" class="btn btn-success" onclick="evaluateTriage()">Diagnóstico IA Inteligente 🪄</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Resultados -->
+        <section id="result-container" class="glass-panel hidden">
+            <div class="result-header">
+                <img src="file:///C:/Users/user/.gemini/antigravity/brain/c3dd78d4-3e24-4a98-ab61-3a8ee9a7b81a/triage_ai_assistant_1778861208473.png" alt="AI Analysis" class="ai-avatar">
+                <h2>Análisis Completado</h2>
+            </div>
+            
+            <div id="triage-result" class="result-box glow-effect">
+                <!-- Contenido dinámico desde JS -->
+            </div>
+
+            <div id="disease-diagnosis" class="disease-box">
+                <!-- Diagnóstico específico (ACV, Infarto, etc) -->
+            </div>
+            
+            <div class="rules-applied hidden">
+                <h3><span class="icon">🔬</span> Lógica de Inferencia:</h3>
+                <code id="rule-used"></code>
+            </div>
+
+            <button class="btn btn-primary full-width mt-4" onclick="resetForm()">Evaluar Nuevo Paciente 🔄</button>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
