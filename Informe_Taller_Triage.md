@@ -76,33 +76,46 @@ La base de conocimiento se estructura sobre **Hechos Clínicos Fisiológicos** (
 **Representación Formal de los Hechos ($H$):**
 * Conciencia ($C$) $\in \{ \text{alerta}, \text{confuso}, \text{inconsciente} \}$
 * Equilibrio / Visión ($E$) $\in \{ \text{normal}, \text{perdida} \}$
-* Respiración ($R$) $\in \{ \text{no}, \text{si} \}$
-* Temperatura ($T$) $\in \{ \text{normal}, \text{fiebre} \}$
-* Presión ($P$) $\in \{ \text{normal}, \text{alta}, \text{baja} \}$
+* Respiración / Dificultad ($R$) $\in \{ \text{no}, \text{si} \}$
+* Temperatura ($T$) $\in \{ \text{numérica } (^{\circ}\text{C}) \}$ (fiebre si $> 38.0^{\circ}\text{C}$)
+* Presión Sistólica ($P$) $\in \{ \text{numérica (mmHg)} \}$ (baja si $< 90$, alta si $> 160$)
+* Saturación SpO2 ($S$) $\in \{ \text{numérica (\%)} \}$ (normal $\ge 95$, leve $90-94$, crítica $< 90$)
+* Frecuencia Cardíaca ($FC$) $\in \{ \text{numérica (lpm)} \}$ (normal $60-100$, taquicardia $> 100$, bradicardia $< 60$)
 * Dolor Pecho ($D$) $\in \{ \text{no}, \text{si} \}$
 * Tos ($To$) $\in \{ \text{ninguna}, \text{seca}, \text{flema} \}$
-* Digestivo ($Di$) $\in \{ \text{ninguno}, \text{nauseas} \}$
+* Digestivo ($Di$) $\in \{ \text{ninguno}, \text{nauseas}, \text{vomitos} \}$
+* Edad ($Ed$) $\in \{ \text{pediatrico}, \text{adulto}, \text{adulto\_mayor} \}$
+* Dolor EVA ($EVA$) $\in \{ \text{sin\_dolor}, \text{leve}, \text{moderado}, \text{severo} \}$
+* Cefalea ($Cef$) $\in \{ \text{ninguno}, \text{moderado}, \text{severo} \}$
 
 ### 2. Reglas del Sistema Experto (Mínimo 5 Reglas Clínicas Formales)
 
 El motor experto evalúa de forma descendente las siguientes reglas de manera instantánea:
 
-* **Regla 1 (Código Rojo - Sospecha de Accidente Cerebrovascular Agudo):**
+* **Regla 1 (Código Rojo - Hipoxia Crítica / Fallo Respiratorio):**
+  $$\text{IF } (S < 90\%) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Fallo Respiratorio Agudo"}$$
+* **Regla 2 (Código Rojo - Sospecha de Accidente Cerebrovascular Agudo / Código ICTUS):**
   $$\text{IF } (E = \text{"perdida"}) \text{ AND } (C \in \{ \text{"confuso"}, \text{"inconsciente"} \}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Código ICTUS: ACV en curso"}$$
-* **Regla 2 (Código Rojo - Sospecha de Infarto Agudo de Miocardio / IAM):**
-  $$\text{IF } (D = \text{"si"}) \text{ AND } (R = \text{"si"} \text{ OR } P = \text{"baja"} \text{ OR } C = \text{"inconsciente"}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Código Infarto: Crisis Coronaria"}$$
-* **Regla 3 (Código Naranja - Neumonía Grave / Infección Respiratoria Aguda Grave):**
-  $$\text{IF } (T = \text{"fiebre"}) \text{ AND } (To \neq \text{"ninguna"}) \text{ AND } (R = \text{"si"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Neumonía Grave / IRAG"}$$
-* **Regla 4 (Código Amarillo - Gastroenteritis Aguda e Infección Digestiva):**
-  $$\text{IF } (Di = \text{"nauseas"}) \text{ AND } (T = \text{"fiebre"}) \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"} \text{ AND } \text{Diagnosis} = \text{"Gastroenteritis con deshidratación"}$$
-* **Regla 5 (Código Verde - Paciente Fisiológicamente Estable):**
-  $$\text{IF } (C = \text{"alerta"}) \text{ AND } (E = \text{"normal"}) \text{ AND } (R = \text{"no"}) \text{ AND } (T = \text{"normal"}) \text{ AND } (P = \text{"normal"}) \text{ AND } (D = \text{"no"}) \text{ AND } (To = \text{"ninguna"}) \text{ AND } (Di = \text{"ninguno"}) \implies \text{Priority} = \text{"VERDE (PRIORIDAD V)"} \text{ AND } \text{Diagnosis} = \text{"Estable sin urgencias significativas"}$$
-* **Regla por Defecto (Código Amarillo - Síntomas Sistémicos Inespecíficos):**
-  $$\text{IF } \text{sintomas\_mezclados\_descompensados} \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"} \text{ AND } \text{Diagnosis} = \text{"Evaluación por Box Urgente"}$$
+* **Regla 3 (Código Rojo - Sospecha de Infarto Agudo de Miocardio / IAM / Código INFARTO):**
+  $$\text{IF } (D = \text{"si"}) \text{ AND } (R = \text{"si"} \text{ OR } P < 90 \text{ OR } C = \text{"inconsciente"}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Código Infarto: Crisis Coronaria"}$$
+* **Regla 4 (Código Naranja - Sospecha de Sepsis / SIRS Activo):**
+  $$\text{IF } (T > 38.0^{\circ}\text{C}) \text{ AND } (P < 90) \text{ AND } (FC > 100) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Posible Sepsis: SIRS Activo"}$$
+* **Regla 5 (Código Naranja - Crisis Hipertensiva Urgente):**
+  $$\text{IF } (P > 160) \text{ AND } (Cef = \text{"severo"} \text{ OR } C = \text{"confuso"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Crisis Hipertensiva Urgente"}$$
+* **Regla 6 (Código Naranja - Crisis Asmática Aguda):**
+  $$\text{IF } (R = \text{"si"}) \text{ AND } (To \neq \text{"ninguna"}) \text{ AND } (S < 95\%) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Crisis Asmática Aguda"}$$
+* **Regla 7 (Código Naranja - IRAG / Neumonía Grave Manchester):**
+  $$\text{IF } (T > 39.0 \text{ AND } P < 90) \text{ OR } (FC > 120 \text{ AND } T > 38.0) \text{ OR } (T > 38.0 \text{ AND } To \neq \text{"ninguna"} \text{ AND } R = \text{"si"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"}$$
+* **Regla 8 (Código Amarillo - Gastroenteritis / Dolor Moderado):**
+  $$\text{IF } (EVA = \text{"severo"} \text{ AND } P > 160) \text{ OR } (Di \in \{ \text{"nauseas"}, \text{"vomitos"} \} \text{ AND } T > 38.0) \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"}$$
+* **Regla 9 (Código Verde - Paciente Fisiológicamente Estable):**
+  $$\text{IF } (T < 37.5 \text{ AND } EVA \in \{ \text{"sin\_dolor"}, \text{"leve"} \} \text{ AND } S \ge 95\% \text{ AND } C = \text{"alerta"} \text{ AND } E = \text{"normal"} \text{ AND } R = \text{"no"} \text{ AND } D = \text{"no"} \text{ AND } To = \text{"ninguna"} \text{ AND } Di = \text{"ninguno"} \text{ AND } 90 \le P \le 140 \text{ AND } 60 \le FC \le 100) \implies \text{Priority} = \text{"VERDE (PRIORIDAD IV)"}$$
+* **Regla 10 (Escalación de Adulto Mayor Vulnerable - Inteligente):**
+  $$\text{IF } (Ed = \text{"adulto\_mayor"}) \text{ AND } (T > 38.0^{\circ}\text{C} \text{ OR } P < 90 \text{ OR } P > 140) \implies \text{Escalar } 1 \text{ Nivel de Triage}$$
 
 ### 3. Tipo de Inferencia y Toma de Decisiones Jerárquica
 * **Inferencia por Encadenamiento hacia Adelante (Forward Chaining):** El motor parte de los hechos ingresados en la interfaz de usuario. Al presionar diagnosticar, el motor experto compara el vector de hechos fisiológicos recolectados con las condiciones clínicas lógicas `IF` en su base de conocimiento. En cuanto hace match con una de las premisas, infiere en milisegundos las conclusiones asignando el color de triage y el diagnóstico explicable.
-* **Toma de Decisiones de Priorización Jerárquica:** El sistema procesa las reglas en orden estricto de gravedad biológica descendente. Evalúa primero las sospechas críticas cardíacas y neurológicas (ACV e IAM en Código Rojo). Si se detecta un Código Rojo, el motor interrumpe la evaluación de prioridad menor y emite de inmediato la alerta máxima. Esto garantiza que un paciente en paro respiratorio o infarto sea clasificado al instante, eliminando retrasos críticos.
+* **Toma de Decisiones de Priorización Jerárquica y Escalación:** El sistema procesa las reglas en orden estricto de gravedad biológica descendente. Evalúa primero las sospechas críticas respiratorias, cardíacas y neurológicas (Hipoxia, ACV e IAM en Código Rojo). Una vez obtenido el resultado basal, se ejecuta la regla de escalación geriátrica que aumenta automáticamente un nivel de urgencia si se detecta inestabilidad térmica o tensional en un adulto mayor, asegurando su atención prioritaria.
 
 ### 4. Matriz de Direccionamiento y Ruteo Clínico Inteligente (Sistemas de Conocimiento)
 Para optimizar el flujo de pacientes y maximizar la eficiencia hospitalaria, el sistema incorpora una **Matriz de Ruteo Inteligente**. Al ingresar al flujo, el paciente o enfermero selecciona el área de atención que solicita (Urgencias, Medicina General, Pediatría, Traumatología o Ginecología) y la lógica basada en conocimiento cruza la gravedad de la prioridad para determinar el destino físico exacto dentro del hospital:

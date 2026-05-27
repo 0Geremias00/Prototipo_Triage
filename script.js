@@ -104,14 +104,31 @@ class TriageInferenceEngine {
             dificultad_respiratoria,
             dolor_pecho,
             tos,
-            sintomas_digestivos
+            sintomas_digestivos,
+            // /* NUEVO */ Parámetros adicionales
+            edad,
+            dolor_eva,
+            dolor_cabeza
         } = this.facts;
+
+        let result = null;
 
         // HEURÍSTICA DE RESOLUCIÓN DE CONFLICTOS: PRIORIZACIÓN CRÍTICA (SHORT-CIRCUIT)
         
-        // REGLA 1: Código ICTUS (ACV) -> Rojo (Inmediato)
-        if (equilibrio === "perdida" && (conciencia === "confuso" || conciencia === "inconsciente")) {
-            return {
+        // /* NUEVO */ REGLA 1: Hipoxia Crítica (ROJO)
+        if (saturacion_o2 < 90) {
+            result = {
+                level: "PRIORIDAD I - ROJO",
+                color: "var(--triage-red)",
+                glowColor: "var(--triage-red-glow)",
+                code: "hipoxia",
+                diagnosis: "🚨 Hipoxia Severa / Fallo Respiratorio Agudo. Peligro inminente de asfixia o daño tisular irreversible. Iniciar oxigenoterapia de urgencia.",
+                ruleApplied: 'IF (saturacion_o2 < 90)\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "HIPOXIA CRÍTICA"'
+            };
+        }
+        // REGLA 2: Código ICTUS (ACV) -> Rojo (Inmediato)
+        else if (equilibrio === "perdida" && (conciencia === "confuso" || conciencia === "inconsciente")) {
+            result = {
                 level: "PRIORIDAD I - ROJO",
                 color: "var(--triage-red)",
                 glowColor: "var(--triage-red-glow)",
@@ -120,10 +137,9 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (equilibrio == "perdida" AND conciencia IN ["confuso", "inconsciente"])\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "ACV AGUDO"'
             };
         }
-
-        // REGLA 2: Código INFARTO (IAM) -> Rojo (Inmediato)
-        if (dolor_pecho === "si" && (dificultad_respiratoria === true || presion_sistolica < 90 || conciencia === "inconsciente")) {
-            return {
+        // REGLA 3: Código INFARTO (IAM) -> Rojo (Inmediato)
+        else if (dolor_pecho === "si" && (dificultad_respiratoria === true || presion_sistolica < 90 || conciencia === "inconsciente")) {
+            result = {
                 level: "PRIORIDAD I - ROJO",
                 color: "var(--triage-red)",
                 glowColor: "var(--triage-red-glow)",
@@ -132,14 +148,46 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (dolor_pecho == "si" AND (dificultad_respiratoria == true OR presion_sistolica < 90 OR conciencia == "inconsciente"))\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "IAM / CRISIS CORONARIA"'
             };
         }
-
-        // REGLA 3: Código NARANJA (IRAG / Neumonía) -> Naranja (Muy Urgente, < 15 min)
-        if (
+        // /* NUEVO */ REGLA 4: Sepsis (NARANJA)
+        else if (temperatura > 38.0 && presion_sistolica < 90 && frecuencia_cardiaca > 100) {
+            result = {
+                level: "PRIORIDAD II - NARANJA",
+                color: "var(--triage-orange)",
+                glowColor: "var(--triage-orange-glow)",
+                code: "sepsis",
+                diagnosis: "🫀 Posible Sepsis: Síndrome de Respuesta Inflamatoria Sistémica (SIRS) activo. Alto riesgo de shock séptico. Hidratación y antibióticos IV inmediatos.",
+                ruleApplied: 'IF (temperatura > 38.0 AND presion_sistolica < 90 AND frecuencia_cardiaca > 100)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "POSIBLE SEPSIS: SIRS ACTIVO"'
+            };
+        }
+        // /* NUEVO */ REGLA 5: Crisis Hipertensiva (NARANJA)
+        else if (presion_sistolica > 160 && (dolor_cabeza === "severo" || conciencia === "confuso")) {
+            result = {
+                level: "PRIORIDAD II - NARANJA",
+                color: "var(--triage-orange)",
+                glowColor: "var(--triage-orange-glow)",
+                code: "crisis_hipertensiva",
+                diagnosis: "🧠 Crisis Hipertensiva urgente. Sospecha de daño en órgano diana. Control de presión guiado y analgésicos de urgencia.",
+                ruleApplied: 'IF (presion_sistolica > 160 AND (dolor_cabeza == "severo" OR conciencia == "confuso"))\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "CRISIS HIPERTENSIVA URGENTE"'
+            };
+        }
+        // /* NUEVO */ REGLA 6: Crisis Asmática (NARANJA)
+        else if (dificultad_respiratoria === true && tos !== "ninguna" && saturacion_o2 < 95) {
+            result = {
+                level: "PRIORIDAD II - NARANJA",
+                color: "var(--triage-orange)",
+                glowColor: "var(--triage-orange-glow)",
+                code: "crisis_asmatica",
+                diagnosis: "🫁 Crisis Asmática aguda. Broncoespasmo severo con hipoxia. Nebulización urgente con broncodilatadores y corticoides.",
+                ruleApplied: 'IF (dificultad_respiratoria == true AND tos != "ninguna" AND saturacion_o2 < 95)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "CRISIS ASMÁTICA AGUDA"'
+            };
+        }
+        // REGLA 7: Código NARANJA (IRAG / Neumonía original)
+        else if (
             (temperatura > 39.0 && presion_sistolica < 90) ||
             (frecuencia_cardiaca > 120 && temperatura > 38.0) ||
             (temperatura > 38.0 && tos !== "ninguna" && dificultad_respiratoria === true)
         ) {
-            return {
+            result = {
                 level: "PRIORIDAD II - NARANJA",
                 color: "var(--triage-orange)",
                 glowColor: "var(--triage-orange-glow)",
@@ -148,25 +196,23 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (temperatura > 39.0 AND presion_sistolica < 90)\n   OR (frecuencia_cardiaca > 120 AND temperatura > 38.0)\n   OR (temperatura > 38.0 AND tos != "ninguna" AND dificultad_respiratoria == true)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "IRAG / NEUMONÍA GRAVE"'
             };
         }
-
-        // REGLA 4: Código AMARILLO (Dolor Agudo / Crisis / Gastro) -> Amarillo (Urgente, < 30 min)
-        if (
+        // REGLA 8: Código AMARILLO (Dolor Agudo / Crisis / Gastro original)
+        else if (
             (escala_dolor > 7 && presion_sistolica > 160) ||
             (sintomas_digestivos === "nauseas" && temperatura > 38.0) ||
             (sintomas_digestivos === "vomitos" && temperatura > 38.0)
         ) {
-            return {
+            result = {
                 level: "PRIORIDAD III - AMARILLO",
                 color: "var(--triage-yellow)",
                 glowColor: "var(--triage-yellow-glow)",
                 code: "gastro",
-                diagnosis: "⚠️ Código AMARILLO: Gastroenteritis Aguda / Crisis Hipertensiva. Requiere canalización, hidratación IV y monitoreo hemodinámico rápido.",
+                diagnosis: "⚠️ Código AMARILLO: Gastroenteritis Aguda / Crisis Hipertensiva Moderada. Requiere canalización, hidratación IV y monitoreo hemodinámico rápido.",
                 ruleApplied: 'IF (escala_dolor > 7 AND presion_sistolica > 160)\n   OR (sintomas_digestivos IN ["nauseas", "vomitos"] AND temperatura > 38.0)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "GASTROENTERITIS / DOLOR AGUDO"'
             };
         }
-
-        // REGLA 5: Código VERDE (Estable) -> Verde (Menos Urgente, < 120 min)
-        if (
+        // REGLA 9: Código VERDE (Estable)
+        else if (
             temperatura < 37.5 &&
             escala_dolor < 3 &&
             saturacion_o2 > 95 &&
@@ -179,7 +225,7 @@ class TriageInferenceEngine {
             presion_sistolica >= 90 && presion_sistolica <= 140 &&
             frecuencia_cardiaca >= 60 && frecuencia_cardiaca <= 100
         ) {
-            return {
+            result = {
                 level: "PRIORIDAD IV - VERDE",
                 color: "var(--triage-green)",
                 glowColor: "var(--triage-green-glow)",
@@ -188,16 +234,39 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (temperatura < 37.5 AND escala_dolor < 3 AND saturacion_o2 > 95 AND todas_las_demas_variables_estables_o_negativas)\nTHEN triage = "VERDE (PRIORIDAD IV)" AND diagnostico = "PACIENTE CLÍNICAMENTE ESTABLE"'
             };
         }
+        // REGLA 10: REGLA POR DEFECTO (Inespecífico)
+        else {
+            result = {
+                level: "PRIORIDAD III - AMARILLO",
+                color: "var(--triage-yellow)",
+                glowColor: "var(--triage-yellow-glow)",
+                code: "default",
+                diagnosis: "⚠️ Código AMARILLO (Inespecífico): Evaluación Clínica Completa Requerida. Síntomas sistémicos inespecíficos descompensados. Controlar signos vitales cada 30 min.",
+                ruleApplied: 'IF (ninguna_otra_regla_activada)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "EVALUAR SÍNTOMAS INESPECÍFICOS"'
+            };
+        }
 
-        // REGLA 6: REGLA POR DEFECTO (Inespecífico) -> Amarillo (Urgente, < 60 min)
-        return {
-            level: "PRIORIDAD III - AMARILLO",
-            color: "var(--triage-yellow)",
-            glowColor: "var(--triage-yellow-glow)",
-            code: "default",
-            diagnosis: "⚠️ Código AMARILLO (Inespecífico): Evaluación Clínica Completa Requerida. Síntomas sistémicos inespecíficos descompensados. Controlar signos vitales cada 30 min.",
-            ruleApplied: 'IF (ninguna_otra_regla_activada)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "EVALUAR SÍNTOMAS INESPECÍFICOS"'
-        };
+        // /* NUEVO */ REGLA 11: Adulto Mayor Vulnerable (ESCALACIÓN)
+        if (result.level !== "PRIORIDAD I - ROJO" && edad === "adulto_mayor" && (temperatura > 38.0 || presion_sistolica < 90 || presion_sistolica > 140)) {
+            const originalLevel = result.level;
+            if (result.level === "PRIORIDAD IV - VERDE") {
+                result.level = "PRIORIDAD III - AMARILLO";
+                result.color = "var(--triage-yellow)";
+                result.glowColor = "var(--triage-yellow-glow)";
+            } else if (result.level === "PRIORIDAD III - AMARILLO") {
+                result.level = "PRIORIDAD II - NARANJA";
+                result.color = "var(--triage-orange)";
+                result.glowColor = "var(--triage-orange-glow)";
+            } else if (result.level === "PRIORIDAD II - NARANJA") {
+                result.level = "PRIORIDAD I - ROJO";
+                result.color = "var(--triage-red)";
+                result.glowColor = "var(--triage-red-glow)";
+            }
+            result.diagnosis = `👵 [VULNERABILIDAD AM] - ${result.diagnosis} (Nivel escalado automáticamente por edad avanzada y alteración térmica/hemodinámica)`;
+            result.ruleApplied += `\n\n/* ESCALACIÓN DE ADULTO MAYOR VULNERABLE */\nIF (edad == "adulto_mayor" AND (temperatura > 38.0 OR presion_sistolica < 90 OR presion_sistolica > 140))\nTHEN ESCALAR_TRIAGE (Baseline: ${originalLevel} -> Final: ${result.level})`;
+        }
+
+        return result;
     }
 }
 
@@ -252,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Inicializar la Base de Datos Local (Historial)
     updateHistoryBadge();
     renderHistory();
+    /* NUEVO */ startCountdownTimers();
 
     // 3. Inicializar el botón de cambio de tema
     const toggleBtn = document.getElementById('theme-toggle-btn');
@@ -365,6 +435,11 @@ function nextStep(current, next) {
  */
 function evaluateTriage() {
     const patientName = document.getElementById('paciente-nombre').value.trim() || "Paciente Anónimo";
+    
+    // /* NUEVO */ Mapear escala EVA a valor numérico para compatibilidad
+    const dolorEvaMap = { 'sin_dolor': 0, 'leve': 2, 'moderado': 5, 'severo': 8 };
+    const escalaDolorVal = dolorEvaMap[document.getElementById('dolor_eva').value] || 0;
+
     const facts = {
         area_solicitada: document.getElementById('area_solicitada').value,
         conciencia: document.getElementById('conciencia').value,
@@ -373,16 +448,20 @@ function evaluateTriage() {
         temperatura: parseFloat(document.getElementById('temperatura').value),
         saturacion_o2: parseInt(document.getElementById('saturacion_o2').value),
         frecuencia_cardiaca: parseInt(document.getElementById('frecuencia_cardiaca').value),
-        escala_dolor: parseInt(document.getElementById('escala_dolor').value),
+        escala_dolor: escalaDolorVal,
         dificultad_respiratoria: document.getElementById('dificultad_respiratoria').value === 'true',
         dolor_pecho: document.getElementById('dolor_pecho').value,
         tos: document.getElementById('tos').value,
-        sintomas_digestivos: document.getElementById('sintomas_digestivos').value
+        sintomas_digestivos: document.getElementById('sintomas_digestivos').value,
+        // /* NUEVO */ Parámetros ampliados
+        edad: document.getElementById('edad').value,
+        dolor_eva: document.getElementById('dolor_eva').value,
+        dolor_cabeza: document.getElementById('dolor_cabeza').value
     };
 
     // Validar paso 3
     const dificultadRaw = document.getElementById('dificultad_respiratoria').value;
-    if (!dificultadRaw || !facts.dolor_pecho || !facts.tos || !facts.sintomas_digestivos) {
+    if (!dificultadRaw || !facts.dolor_pecho || !facts.tos || !facts.sintomas_digestivos || !facts.dolor_eva || !facts.dolor_cabeza) {
         nextStep(3, 3);
         return;
     }
@@ -414,6 +493,55 @@ function evaluateTriage() {
     } else {
         finalizeTriageEvaluation(patientName, facts);
     }
+}
+
+/**
+ * /* NUEVO */ Calcula el Score NEWS2 Simplificado (0 a 20 pts)
+ */
+function calculateNEWS2(facts) {
+    let score = 0;
+    
+    // 1. Frecuencia Respiratoria / Dificultad
+    if (facts.dificultad_respiratoria) {
+        score += 3; // Equivalente a taquipnea severa
+    }
+    
+    // 2. Saturación de Oxígeno (SpO2)
+    const spo2 = facts.saturacion_o2;
+    if (spo2 >= 96) score += 0;
+    else if (spo2 >= 94) score += 1;
+    else if (spo2 >= 92) score += 2;
+    else score += 3; // < 92%
+    
+    // 3. Presión Sistólica
+    const bps = facts.presion_sistolica;
+    if (bps <= 90 || bps >= 220) score += 3;
+    else if (bps <= 100) score += 2;
+    else if (bps <= 110) score += 1;
+    else score += 0; // 111 - 219
+    
+    // 4. Frecuencia Cardíaca
+    const hr = facts.frecuencia_cardiaca;
+    if (hr <= 40 || hr >= 131) score += 3;
+    else if (hr <= 50) score += 1;
+    else if (hr >= 111 && hr <= 130) score += 2;
+    else if (hr >= 91 && hr <= 110) score += 1;
+    else score += 0; // 51 - 90
+    
+    // 5. Temperatura Corporal
+    const temp = facts.temperatura;
+    if (temp <= 35.0) score += 3;
+    else if (temp <= 36.0) score += 1;
+    else if (temp >= 39.1) score += 2;
+    else if (temp >= 38.1) score += 1;
+    else score += 0; // 36.1 - 38.0
+    
+    // 6. Estado de Conciencia
+    if (facts.conciencia !== 'alerta') {
+        score += 3; // Confuso o inconsciente sumará 3 puntos en NEWS2
+    }
+    
+    return score;
 }
 
 /**
@@ -470,6 +598,40 @@ function finalizeTriageEvaluation(patientName, facts) {
     document.getElementById('wizard-container').classList.add('hidden');
     document.getElementById('result-container').classList.remove('hidden');
 
+    // /* NUEVO */ Calcular y actualizar el Score NEWS2 Simplificado
+    const news2Score = calculateNEWS2(facts);
+    const news2ScoreVal = document.getElementById('news2-score-val');
+    const news2Progress = document.getElementById('news2-progress');
+    const news2Desc = document.getElementById('news2-desc');
+
+    if (news2ScoreVal && news2Progress && news2Desc) {
+        news2ScoreVal.textContent = `${news2Score} / 20 PTS`;
+        const pct = (news2Score / 20) * 100;
+        news2Progress.style.width = `${pct}%`;
+        
+        let color = 'var(--triage-green)';
+        let glow = 'rgba(74, 222, 128, 0.4)';
+        let desc = '';
+        
+        if (news2Score >= 7) {
+            color = 'var(--triage-red)';
+            glow = 'rgba(244, 63, 94, 0.4)';
+            desc = '🔴 RIESGO CLÍNICO ALTO: Posible descompensación aguda crítica. Monitoreo continuo inmediato.';
+        } else if (news2Score >= 5) {
+            color = 'var(--triage-orange)';
+            glow = 'rgba(251, 146, 60, 0.4)';
+            desc = '🟠 RIESGO CLÍNICO MEDIO: Alerta de respuesta clínica urgente. Monitoreo frecuente obligatorio.';
+        } else {
+            color = 'var(--triage-green)';
+            glow = 'rgba(74, 222, 128, 0.4)';
+            desc = '🟢 RIESGO CLÍNICO BAJO: Paciente fisiológicamente estable. Continuar vigilancia regular.';
+        }
+        
+        news2Progress.style.backgroundColor = color;
+        news2Progress.style.boxShadow = `0 0 10px ${glow}`;
+        news2Desc.textContent = desc;
+    }
+
     // Actualizar datos de resultado en pantalla
     document.getElementById('result-patient-name').innerHTML = `Paciente: <span>${patientName}</span>`;
     document.getElementById('result-requested-area').innerHTML = `Área Solicitada: <span>${getAreaLabel(facts.area_solicitada)}</span>`;
@@ -515,7 +677,7 @@ function finalizeTriageEvaluation(patientName, facts) {
     AudioFX.playSuccess();
 
     // Guardar en base de datos local
-    saveTriageCase(patientName, conclusion.level, conclusion.color, conclusion.diagnosis, conclusion.ruleApplied, facts, assignedArea);
+    saveTriageCase(patientName, conclusion.level, conclusion.color, conclusion.diagnosis, conclusion.ruleApplied, facts, assignedArea, news2Score);
 }
 
 /**
@@ -791,7 +953,7 @@ function toggleRulesUsed() {
 /**
  * Guarda un caso de Triage en LocalStorage
  */
-function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts, assignedArea) {
+function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts, assignedArea, news2Score) {
     let history = [];
     try {
         history = JSON.parse(localStorage.getItem('triageHistory')) || [];
@@ -808,7 +970,8 @@ function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts, 
         ruleUsed: ruleUsed,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         facts: facts,
-        assignedArea: assignedArea
+        assignedArea: assignedArea,
+        news2Score: news2Score
     };
 
     history.unshift(newCase);
@@ -888,9 +1051,20 @@ function renderHistory() {
             if (item.facts.presion_sistolica < 90) symptomPills.push('📉 P. Baja');
             if (item.facts.presion_sistolica > 160) symptomPills.push('📈 P. Alta');
             if (item.facts.temperatura > 38.0) symptomPills.push('🔥 Fiebre');
-            if (item.facts.saturacion_o2 < 95) symptomPills.push('🩸 SpO2 Baja');
-            if (item.facts.frecuencia_cardiaca > 120) symptomPills.push('🫀 Taquicardia');
-            if (item.facts.escala_dolor > 7) symptomPills.push('💔 Dolor Severo');
+            if (item.facts.saturacion_o2 < 90) symptomPills.push('🩸 SpO2 Crítica');
+            else if (item.facts.saturacion_o2 < 95) symptomPills.push('🩸 SpO2 Leve');
+            
+            if (item.facts.frecuencia_cardiaca > 100) symptomPills.push('🫀 Taquicardia');
+            else if (item.facts.frecuencia_cardiaca < 60) symptomPills.push('🫀 Bradicardia');
+            
+            if (item.facts.edad === 'pediatrico') symptomPills.push('👶 Pediátrico');
+            if (item.facts.edad === 'adulto_mayor') symptomPills.push('👵 Adulto Mayor');
+            
+            if (item.facts.dolor_eva === 'moderado') symptomPills.push('🟠 Dolor Mod.');
+            if (item.facts.dolor_eva === 'severo') symptomPills.push('🔴 Dolor Sev.');
+            
+            if (item.facts.dolor_cabeza === 'severo') symptomPills.push('🚨 Cefalea Sev.');
+            
             if (item.facts.dolor_pecho === 'si') symptomPills.push('💔 Dolor Pecho');
             if (item.facts.tos === 'seca') symptomPills.push('😷 Tos Seca');
             if (item.facts.tos === 'flema') symptomPills.push('🤢 Tos Flema');
@@ -911,7 +1085,10 @@ function renderHistory() {
                 <div class="h-areas-container">
                     <span class="h-area-tag requested" title="Área solicitada por el paciente">📋 Solicitó: <strong>${reqArea}</strong></span>
                     <span class="h-area-tag assigned" title="Área asignada por el motor experto">📍 Asignado: <strong>${asgArea}</strong></span>
+                    <span class="h-area-tag news2" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted);" title="Puntaje NEWS2">📊 NEWS2: <strong>${item.news2Score !== undefined ? item.news2Score : 'N/A'} pts</strong></span>
                 </div>
+                <!-- /* NUEVO */ Temporizador de re-evaluación clínico -->
+                <div class="h-timer" data-case-id="${item.id}">🕒 Calculando tiempo...</div>
                 <span class="h-time">🕒 Evaluado a las: ${item.time}</span>
             </div>
             <div class="history-card-right">
@@ -970,4 +1147,104 @@ function toggleTheme() {
         localStorage.setItem('triageTheme', 'dark');
         if (toggleBtn) toggleBtn.querySelector('.toggle-icon').textContent = '🌙';
     }
+}
+
+/**
+ * /* NUEVO */ Controla el temporizador regresivo de re-evaluación clínica en tiempo real (minutos:segundos)
+ */
+let countdownInterval = null;
+
+function startCountdownTimers() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    
+    countdownInterval = setInterval(() => {
+        const timerElements = document.querySelectorAll('.h-timer');
+        if (timerElements.length === 0) return;
+        
+        let history = [];
+        try {
+            history = JSON.parse(localStorage.getItem('triageHistory')) || [];
+        } catch(e) {
+            return;
+        }
+        
+        timerElements.forEach(el => {
+            const caseId = parseInt(el.getAttribute('data-case-id'));
+            const item = history.find(c => c.id === caseId);
+            if (!item) return;
+            
+            const card = el.closest('.history-card');
+            
+            // Determinar tiempo permitido en minutos según Protocolo Manchester
+            let allowedMinutes = 120; // Verde (120 min) por defecto
+            if (item.resultText.includes("ROJO")) allowedMinutes = 0;
+            else if (item.resultText.includes("NARANJA")) allowedMinutes = 15;
+            else if (item.resultText.includes("AMARILLO")) allowedMinutes = 30;
+            
+            const allowedMs = allowedMinutes * 60 * 1000;
+            const elapsedMs = Date.now() - item.id;
+            const remainingMs = allowedMs - elapsedMs;
+            
+            if (remainingMs <= 0 || allowedMinutes === 0) {
+                el.innerHTML = "⚠️ TIEMPO EXCEDIDO";
+                el.style.color = "var(--triage-red)";
+                el.style.fontWeight = "800";
+                if (card) {
+                    card.classList.add('time-expired');
+                }
+            } else {
+                const totalSeconds = Math.floor(remainingMs / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                el.innerHTML = `⏳ Re-evaluar en: <strong>${formattedTime}</strong>`;
+                el.style.color = "var(--text-muted)";
+                if (card) {
+                    card.classList.remove('time-expired');
+                }
+            }
+        });
+    }, 1000);
+}
+
+/**
+ * /* NUEVO */ Exporta el historial del turno actual como un archivo CSV estructurado
+ */
+function exportHistoryToCSV() {
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem('triageHistory')) || [];
+    } catch(e) {
+        history = [];
+    }
+    
+    if (history.length === 0) {
+        alert("No hay registros clínicos para exportar en este turno.");
+        return;
+    }
+    
+    // Cabeceras estructuradas
+    let csvContent = "Hora,Nombre Paciente,Nivel Triage,Diagnóstico,Score NEWS2,Regla Aplicada\n";
+    
+    history.forEach(item => {
+        const time = item.time || "";
+        const name = `"${(item.name || "").replace(/"/g, '""')}"`;
+        const triageLevel = `"${(item.resultText || "").replace(/"/g, '""')}"`;
+        const diagnosis = `"${(item.diagnosis || "").replace(/"/g, '""')}"`;
+        const news2 = item.news2Score !== undefined ? item.news2Score : "N/A";
+        const rule = `"${(item.ruleUsed || "").replace(/"/g, '""')}"`;
+        
+        csvContent += `${time},${name},${triageLevel},${diagnosis},${news2},${rule}\n`;
+    });
+    
+    // Crear Blob en UTF-8 con BOM
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `triage_turno_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }

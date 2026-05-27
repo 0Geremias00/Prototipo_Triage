@@ -780,6 +780,28 @@ body {
     color: white;
 }
 
+/* /* NUEVO */ Botón Exportar Turno CSV */
+.btn-export {
+    padding: 0.85rem 1.2rem;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    background: rgba(56, 189, 248, 0.06);
+    color: #38bdf8;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.25s ease;
+}
+
+.btn-export:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--triage-blue);
+    color: white;
+}
+
 .history-list {
     display: flex;
     flex-direction: column;
@@ -1320,6 +1342,19 @@ body {
     border-color: rgba(15, 23, 42, 0.15);
 }
 
+/* /* NUEVO */ Sobrescribir estilos en Tema Claro */
+.light-theme .btn-export {
+    border: 1px solid rgba(3, 105, 161, 0.15);
+    background: rgba(3, 105, 161, 0.04);
+    color: #0369a1;
+}
+
+.light-theme .btn-export:hover {
+    background: rgba(3, 105, 161, 0.08);
+    border-color: var(--triage-blue);
+    color: #0284c7;
+}
+
 /* Responsiveness adjustments for toggle button */
 @media (max-width: 600px) {
     .theme-toggle-btn {
@@ -1604,4 +1639,25 @@ body, header, main, section, .glass-panel, input, button, .option-card, .tab-btn
     .area-cards-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* /* NUEVO */ Animación y estilos de re-evaluación en Historial */
+.history-card.time-expired {
+    border-color: var(--triage-red) !important;
+    animation: flashBorderRed 1.5s infinite ease-in-out;
+}
+
+@keyframes flashBorderRed {
+    0%, 100% { box-shadow: 0 0 5px rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.4) !important; }
+    50% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); border-color: var(--triage-red) !important; }
+}
+
+.h-timer {
+    font-size: 0.76rem;
+    font-weight: 600;
+    margin-top: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.3s ease;
 }

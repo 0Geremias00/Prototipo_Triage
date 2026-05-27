@@ -77,7 +77,7 @@
             <form id="triage-form" onsubmit="event.preventDefault();">
                 <!-- Paso 1: Datos y Neurología/Identificación -->
                 <div class="step active" id="step-1">
-                    <h2>🧠 Identificación & Evaluación Neurológica</h2>
+                    <h2>🧠 Identificación & Evaluación</h2>
 
                     <!-- Patient Identification -->
                     <div class="form-group first-group">
@@ -177,6 +177,15 @@
                         <input type="hidden" id="equilibrio" required>
                     </div>
 
+                    <!-- /* NUEVO */ Saturación de Oxígeno SpO2 (%) -->
+                    <div class="form-group">
+                        <label for="saturacion_o2">Saturación de Oxígeno (SpO2)</label>
+                        <div class="vital-input-wrapper">
+                            <input type="number" id="saturacion_o2" class="vital-input" placeholder="E.g., 98 (Normal ≥95%, Leve 90-94%, Crítica <90%)" min="50" max="100" required>
+                            <span class="vital-unit">%</span>
+                        </div>
+                    </div>
+
                     <button type="button" class="btn btn-primary" onclick="nextStep(1, 2)">Continuar Evaluación <span>&rarr;</span></button>
                 </div>
 
@@ -203,15 +212,6 @@
                             </div>
                         </div>
 
-                        <!-- Saturación de Oxígeno -->
-                        <div class="vital-input-group">
-                            <label for="saturacion_o2">Saturación O2 (SpO2)</label>
-                            <div class="vital-input-wrapper">
-                                <input type="number" id="saturacion_o2" class="vital-input" placeholder="E.g., 98" min="50" max="100" required>
-                                <span class="vital-unit">%</span>
-                            </div>
-                        </div>
-
                         <!-- Frecuencia Cardíaca -->
                         <div class="vital-input-group">
                             <label for="frecuencia_cardiaca">Frecuencia Cardíaca</label>
@@ -222,13 +222,33 @@
                         </div>
                     </div>
 
-                    <!-- Escala del Dolor -->
+                    <!-- /* NUEVO */ Edad del Paciente -->
                     <div class="form-group mt-4">
-                        <label for="escala_dolor">Escala del Dolor (1 al 10)</label>
-                        <div class="vital-input-wrapper">
-                            <input type="number" id="escala_dolor" class="vital-input" placeholder="1 = Leve, 10 = Dolor insoportable..." min="1" max="10" required>
-                            <span class="vital-unit">/ 10</span>
+                        <label>Edad del Paciente</label>
+                        <div class="option-cards-group row-layout" data-input-id="edad">
+                            <div class="option-card" data-value="pediatrico">
+                                <span class="card-icon">👶</span>
+                                <div class="card-text">
+                                    <span class="card-title">Pediátrico</span>
+                                    <span class="card-desc">&lt; 12 años</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="adulto">
+                                <span class="card-icon">🧑</span>
+                                <div class="card-text">
+                                    <span class="card-title">Adulto</span>
+                                    <span class="card-desc">12-64 años</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="adulto_mayor">
+                                <span class="card-icon">👵</span>
+                                <div class="card-text">
+                                    <span class="card-title">Adulto Mayor</span>
+                                    <span class="card-desc">≥ 65 años</span>
+                                </div>
+                            </div>
                         </div>
+                        <input type="hidden" id="edad" required>
                     </div>
 
                     <div class="button-group">
@@ -343,6 +363,71 @@
                         <input type="hidden" id="sintomas_digestivos" required>
                     </div>
 
+                    <!-- /* NUEVO */ Dolor en escala EVA -->
+                    <div class="form-group">
+                        <label>Dolor en escala EVA</label>
+                        <div class="option-cards-group" data-input-id="dolor_eva">
+                            <div class="option-card" data-value="sin_dolor">
+                                <span class="card-icon">🟢</span>
+                                <div class="card-text">
+                                    <span class="card-title">Sin dolor (0)</span>
+                                    <span class="card-desc">Paciente sin molestias</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="leve">
+                                <span class="card-icon">🟡</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dolor Leve (1-3)</span>
+                                    <span class="card-desc">Molestia tolerable</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="moderado">
+                                <span class="card-icon">🟠</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dolor Moderado (4-6)</span>
+                                    <span class="card-desc">Interfiere con actividades</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="severo">
+                                <span class="card-icon">🔴</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dolor Severo (7-10)</span>
+                                    <span class="card-desc">Dolor insoportable / limitante</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="dolor_eva" required>
+                    </div>
+
+                    <!-- /* NUEVO */ Dolor de Cabeza (Cefalea) -->
+                    <div class="form-group">
+                        <label>¿Presenta Dolor de Cabeza (Cefalea)?</label>
+                        <div class="option-cards-group" data-input-id="dolor_cabeza">
+                            <div class="option-card" data-value="ninguno">
+                                <span class="card-icon">🧠</span>
+                                <div class="card-text">
+                                    <span class="card-title">Ausente o Leve</span>
+                                    <span class="card-desc">Sin cefalea importante</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="moderado">
+                                <span class="card-icon">🤕</span>
+                                <div class="card-text">
+                                    <span class="card-title">Cefalea Moderada</span>
+                                    <span class="card-desc">Dolor de cabeza tolerable</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="severo">
+                                <span class="card-icon">🚨</span>
+                                <div class="card-text">
+                                    <span class="card-title">Cefalea Severa</span>
+                                    <span class="card-desc">Dolor de cabeza agudo e insoportable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="dolor_cabeza" required>
+                    </div>
+
                     <div class="button-group">
                         <button type="button" class="btn btn-secondary" onclick="nextStep(3, 2)"><span>&larr;</span> Anterior</button>
                         <button type="button" class="btn btn-success" onclick="evaluateTriage()">Diagnóstico IA Inteligente 🪄</button>
@@ -402,6 +487,18 @@
                 PRIORIDAD I - ROJO
             </div>
 
+            <!-- /* NUEVO */ SCORE NEWS2 SIMPLIFICADO -->
+            <div id="news2-panel" class="news2-panel-box" style="margin: 1.2rem 0; padding: 1.2rem; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-glass); border-radius: 16px;">
+                <div class="news2-title" style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">
+                    <span>SCORE NEWS2 SIMPLIFICADO</span>
+                    <span id="news2-score-val" style="color: var(--text-main); font-weight: 800;">0 / 20 PTS</span>
+                </div>
+                <div class="news2-progress-bar" style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; margin-top: 0.5rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.02);">
+                    <div id="news2-progress" style="height: 100%; width: 0%; background-color: var(--triage-green); transition: width 0.5s ease, background-color 0.5s ease; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);"></div>
+                </div>
+                <p id="news2-desc" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem; font-weight: 500; text-align: left;"></p>
+            </div>
+
             <!-- Specific Pathology & Clinical Warnings -->
             <div id="disease-diagnosis" class="disease-box">
                 ⚠️ ALERTA CÓDIGO ICTUS: Posible Accidente Cerebrovascular (ACV). Daño neurológico agudo inminente.
@@ -445,6 +542,8 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" id="history-search" placeholder="Buscar paciente por nombre..." oninput="renderHistory()">
                 </div>
+                <!-- /* NUEVO */ Botón Exportar Turno CSV -->
+                <button class="btn-export" onclick="exportHistoryToCSV()">⬇️ Exportar Turno CSV</button>
                 <button class="btn-clear" onclick="clearHistory()">🧹 Limpiar Todo</button>
             </div>
 
