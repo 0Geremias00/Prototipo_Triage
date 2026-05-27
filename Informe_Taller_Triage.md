@@ -78,39 +78,57 @@ La base de conocimiento se estructura sobre **Hechos Clínicos Fisiológicos** (
 * Equilibrio / Visión ($E$) $\in \{ \text{normal}, \text{perdida} \}$
 * Respiración / Dificultad ($R$) $\in \{ \text{no}, \text{si} \}$
 * Temperatura ($T$) $\in \{ \text{numérica } (^{\circ}\text{C}) \}$ (fiebre si $> 38.0^{\circ}\text{C}$)
-* Presión Sistólica ($P$) $\in \{ \text{numérica (mmHg)} \}$ (baja si $< 90$, alta si $> 160$)
+* Presión Sistólica ($P$) $\in \{ \text{numérica (mmHg)} \}$ (baja si $< 90$, alta si $> 160$ en adultos)
 * Saturación SpO2 ($S$) $\in \{ \text{numérica (\%)} \}$ (normal $\ge 95$, leve $90-94$, crítica $< 90$)
-* Frecuencia Cardíaca ($FC$) $\in \{ \text{numérica (lpm)} \}$ (normal $60-100$, taquicardia $> 100$, bradicardia $< 60$)
+* Frecuencia Cardíaca ($FC$) $\in \{ \text{numérica (lpm)} \}$ (normal $60-100$, taquicardia $> 100$, bradicardia $< 60$ en adultos)
 * Dolor Pecho ($D$) $\in \{ \text{no}, \text{si} \}$
 * Tos ($To$) $\in \{ \text{ninguna}, \text{seca}, \text{flema} \}$
 * Digestivo ($Di$) $\in \{ \text{ninguno}, \text{nauseas}, \text{vomitos} \}$
 * Edad ($Ed$) $\in \{ \text{pediatrico}, \text{adulto}, \text{adulto\_mayor} \}$
 * Dolor EVA ($EVA$) $\in \{ \text{sin\_dolor}, \text{leve}, \text{moderado}, \text{severo} \}$
 * Cefalea ($Cef$) $\in \{ \text{ninguno}, \text{moderado}, \text{severo} \}$
+* Área de Destino Solicitada ($AD$) $\in \{ \text{urgencias}, \text{general}, \text{pediatria}, \text{trauma}, \text{gineco} \}$
+* Síntomas Pediátricos ($SP$) $\in \{ \text{normal}, \text{moderado}, \text{severo} \}$
+* Alarma de Trauma ($AT$) $\in \{ \text{ninguna}, \text{moderada}, \text{severa} \}$
+* Alarma Obstétrica ($AO$) $\in \{ \text{ninguna}, \text{moderada}, \text{severa} \}$
 
-### 2. Reglas del Sistema Experto (Mínimo 5 Reglas Clínicas Formales)
+### 2. Reglas del Sistema Experto (Módulo Basado en Conocimiento Manchester y Especialidades)
 
 El motor experto evalúa de forma descendente las siguientes reglas de manera instantánea:
 
-* **Regla 1 (Código Rojo - Hipoxia Crítica / Fallo Respiratorio):**
-  $$\text{IF } (S < 90\%) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Fallo Respiratorio Agudo"}$$
-* **Regla 2 (Código Rojo - Sospecha de Accidente Cerebrovascular Agudo / Código ICTUS):**
+* **Regla 1 (Código Trauma Crítico - ROJO):**
+  $$\text{IF } (AD = \text{"trauma"}) \text{ AND } (AT = \text{"severa"}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Trauma Crítico / Fractura Abierta / Hemorragia Activa"}$$
+* **Regla 2 (Código Rojo Obstétrico - ROJO):**
+  $$\text{IF } (AD = \text{"gineco"}) \text{ AND } (AO = \text{"severa"}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Emergencia Obstétrica Grave: Sangrado Vaginal Activo"}$$
+* **Regla 3 (Código Rojo - Hipoxia Crítica / Fallo Respiratorio):**
+  $$\text{IF } (S < 90\%) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Fallo Respiratorio Agudo / Hipoxia Severa"}$$
+* **Regla 4 (Código Rojo - Sospecha de Accidente Cerebrovascular Agudo / Código ICTUS):**
   $$\text{IF } (E = \text{"perdida"}) \text{ AND } (C \in \{ \text{"confuso"}, \text{"inconsciente"} \}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Código ICTUS: ACV en curso"}$$
-* **Regla 3 (Código Rojo - Sospecha de Infarto Agudo de Miocardio / IAM / Código INFARTO):**
+* **Regla 5 (Código Rojo - Sospecha de Infarto Agudo de Miocardio / IAM / Código INFARTO):**
   $$\text{IF } (D = \text{"si"}) \text{ AND } (R = \text{"si"} \text{ OR } P < 90 \text{ OR } C = \text{"inconsciente"}) \implies \text{Priority} = \text{"ROJO (PRIORIDAD I)"} \text{ AND } \text{Diagnosis} = \text{"Código Infarto: Crisis Coronaria"}$$
-* **Regla 4 (Código Naranja - Sospecha de Sepsis / SIRS Activo):**
-  $$\text{IF } (T > 38.0^{\circ}\text{C}) \text{ AND } (P < 90) \text{ AND } (FC > 100) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Posible Sepsis: SIRS Activo"}$$
-* **Regla 5 (Código Naranja - Crisis Hipertensiva Urgente):**
-  $$\text{IF } (P > 160) \text{ AND } (Cef = \text{"severo"} \text{ OR } C = \text{"confuso"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Crisis Hipertensiva Urgente"}$$
-* **Regla 6 (Código Naranja - Crisis Asmática Aguda):**
+* **Regla 6 (Código Naranja - Deshidratación Pediátrica Grave):**
+  $$\text{IF } (AD = \text{"pediatria"}) \text{ AND } (SP = \text{"severo"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Deshidratación Grave Pediátrica: Signo de pliegue positivo"}$$
+* **Regla 7 (Código Naranja - Sospecha de Sepsis / SIRS Activo):**
+  * *Ajuste hemodinámico:* Si $Ed = \text{"pediatrico"}$, se calibra la bradipresión a $P < 80$ y la frecuencia crítica a $FC > 130$.
+  $$\text{IF } (T > 38.0^{\circ}\text{C}) \text{ AND } (P < P_{\text{sepsis}}) \text{ AND } (FC > FC_{\text{sepsis}}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Posible Sepsis: SIRS Activo"}$$
+* **Regla 8 (Código Naranja - Crisis Hipertensiva Urgente):**
+  * *Ajuste de presión:* Si $Ed = \text{"pediatrico"}$, el umbral de crisis se reduce a $P > 130$ mmHg.
+  $$\text{IF } (P > P_{\text{crisis}}) \text{ AND } (Cef = \text{"severo"} \text{ OR } C = \text{"confuso"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Crisis Hipertensiva Urgente"}$$
+* **Regla 9 (Código Naranja - Crisis Asmática Aguda):**
   $$\text{IF } (R = \text{"si"}) \text{ AND } (To \neq \text{"ninguna"}) \text{ AND } (S < 95\%) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"} \text{ AND } \text{Diagnosis} = \text{"Crisis Asmática Aguda"}$$
-* **Regla 7 (Código Naranja - IRAG / Neumonía Grave Manchester):**
+* **Regla 10 (Código Naranja - IRAG / Neumonía Grave Manchester):**
   $$\text{IF } (T > 39.0 \text{ AND } P < 90) \text{ OR } (FC > 120 \text{ AND } T > 38.0) \text{ OR } (T > 38.0 \text{ AND } To \neq \text{"ninguna"} \text{ AND } R = \text{"si"}) \implies \text{Priority} = \text{"NARANJA (PRIORIDAD II)"}$$
-* **Regla 8 (Código Amarillo - Gastroenteritis / Dolor Moderado):**
+* **Regla 11 (Código Amarillo - Trauma Cerrado Moderado):**
+  $$\text{IF } (AD = \text{"trauma"}) \text{ AND } (AT = \text{"moderada"}) \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"} \text{ AND } \text{Diagnosis} = \text{"Trauma Moderado: Sospecha de Fractura Cerrada"}$$
+* **Regla 12 (Código Amarillo - Emergencia Obstétrica Moderada):**
+  $$\text{IF } (AD = \text{"gineco"}) \text{ AND } (AO = \text{"moderada"}) \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"} \text{ AND } \text{Diagnosis} = \text{"Ginecología: Contracciones Activas / Ruptura de Membrana"}$$
+* **Regla 13 (Código Amarillo - Deshidratación Pediátrica Moderada):**
+  $$\text{IF } (AD = \text{"pediatria"}) \text{ AND } (SP = \text{"moderado"}) \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"} \text{ AND } \text{Diagnosis} = \text{"Pediatría: Deshidratación Leve / Irritabilidad"}$$
+* **Regla 14 (Código Amarillo - Gastroenteritis / Dolor Moderado):**
   $$\text{IF } (EVA = \text{"severo"} \text{ AND } P > 160) \text{ OR } (Di \in \{ \text{"nauseas"}, \text{"vomitos"} \} \text{ AND } T > 38.0) \implies \text{Priority} = \text{"AMARILLO (PRIORIDAD III)"}$$
-* **Regla 9 (Código Verde - Paciente Fisiológicamente Estable):**
-  $$\text{IF } (T < 37.5 \text{ AND } EVA \in \{ \text{"sin\_dolor"}, \text{"leve"} \} \text{ AND } S \ge 95\% \text{ AND } C = \text{"alerta"} \text{ AND } E = \text{"normal"} \text{ AND } R = \text{"no"} \text{ AND } D = \text{"no"} \text{ AND } To = \text{"ninguna"} \text{ AND } Di = \text{"ninguno"} \text{ AND } 90 \le P \le 140 \text{ AND } 60 \le FC \le 100) \implies \text{Priority} = \text{"VERDE (PRIORIDAD IV)"}$$
-* **Regla 10 (Escalación de Adulto Mayor Vulnerable - Inteligente):**
+* **Regla 15 (Código Verde - Paciente Fisiológicamente Estable):**
+  $$\text{IF } (T < 37.5 \text{ AND } EVA \in \{ \text{"sin\_dolor"}, \text{"leve"} \} \text{ AND } S \ge 95\% \text{ AND } C = \text{"alerta"} \text{ AND } (AD \in \{ \text{"pediatria"}, \text{"gineco"} \} \text{ OR } E = \text{"normal"}) \text{ AND } R = \text{"no"} \text{ AND } D = \text{"no"} \text{ AND } To = \text{"ninguna"} \text{ AND } Di = \text{"ninguno"} \text{ AND } 90 \le P \le 140 \text{ AND } 60 \le FC \le 100) \implies \text{Priority} = \text{"VERDE (PRIORIDAD IV)"}$$
+* **Regla 16 (Escalación de Adulto Mayor Vulnerable - Inteligente):**
   $$\text{IF } (Ed = \text{"adulto\_mayor"}) \text{ AND } (T > 38.0^{\circ}\text{C} \text{ OR } P < 90 \text{ OR } P > 140) \implies \text{Escalar } 1 \text{ Nivel de Triage}$$
 
 ### 3. Tipo de Inferencia y Toma de Decisiones Jerárquica

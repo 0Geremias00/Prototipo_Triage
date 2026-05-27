@@ -156,7 +156,7 @@
                     </div>
 
                     <!-- Equilibrio y Visión -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general,trauma">
                         <label>Equilibrio y Visión</label>
                         <div class="option-cards-group row-layout" data-input-id="equilibrio">
                             <div class="option-card" data-value="normal">
@@ -262,7 +262,7 @@
                     <h2>🦠 Síntomas Específicos Complementarios</h2>
                     
                     <!-- Dificultad Respiratoria -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general,pediatria">
                         <label>Dificultad Respiratoria</label>
                         <div class="option-cards-group row-layout" data-input-id="dificultad_respiratoria">
                             <div class="option-card" data-value="false">
@@ -284,7 +284,7 @@
                     </div>
 
                     <!-- Dolor de Pecho -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general">
                         <label>¿Presenta Dolor de Pecho?</label>
                         <div class="option-cards-group row-layout" data-input-id="dolor_pecho">
                             <div class="option-card" data-value="no">
@@ -306,7 +306,7 @@
                     </div>
 
                     <!-- Tos -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general,pediatria">
                         <label>Tos y Vías Aéreas</label>
                         <div class="option-cards-group" data-input-id="tos">
                             <div class="option-card" data-value="ninguna">
@@ -335,7 +335,7 @@
                     </div>
 
                     <!-- Síntomas Digestivos -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general,pediatria">
                         <label>Síntomas Digestivos</label>
                         <div class="option-cards-group" data-input-id="sintomas_digestivos">
                             <div class="option-card" data-value="ninguno">
@@ -364,7 +364,7 @@
                     </div>
 
                     <!-- /* NUEVO */ Dolor en escala EVA -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general,pediatria,trauma,gineco">
                         <label>Dolor en escala EVA</label>
                         <div class="option-cards-group" data-input-id="dolor_eva">
                             <div class="option-card" data-value="sin_dolor">
@@ -400,7 +400,7 @@
                     </div>
 
                     <!-- /* NUEVO */ Dolor de Cabeza (Cefalea) -->
-                    <div class="form-group">
+                    <div class="form-group dynamic-field" data-areas="urgencias,general">
                         <label>¿Presenta Dolor de Cabeza (Cefalea)?</label>
                         <div class="option-cards-group" data-input-id="dolor_cabeza">
                             <div class="option-card" data-value="ninguno">
@@ -426,6 +426,93 @@
                             </div>
                         </div>
                         <input type="hidden" id="dolor_cabeza" required>
+                    </div>
+
+                    <!-- Síntomas Pediátricos Específicos -->
+                    <div class="form-group dynamic-field" data-areas="pediatria">
+                        <label>Síntomas Pediátricos Específicos</label>
+                        <div class="option-cards-group" data-input-id="sintomas_pediatricos">
+                            <div class="option-card" data-value="normal">
+                                <span class="card-icon">👶</span>
+                                <div class="card-text">
+                                    <span class="card-title">Estable / Llanto Consolable</span>
+                                    <span class="card-desc">Activo, reactivo, se consuela fácilmente</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="moderado">
+                                <span class="card-icon">🟡</span>
+                                <div class="card-text">
+                                    <span class="card-title">Deshidratación Leve / Irritabilidad</span>
+                                    <span class="card-desc">Mucosas semihúmedas, llanto constante e irritable</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="severo">
+                                <span class="card-icon">🔴</span>
+                                <div class="card-text">
+                                    <span class="card-title">Deshidratación Grave / Letargia / Signo de Pliegue</span>
+                                    <span class="card-desc">Letárgico, ojos hundidos, llanto sin lágrimas, signo de pliegue positivo</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="sintomas_pediatricos" required disabled>
+                    </div>
+
+                    <!-- Mecanismo de Lesión / Trauma -->
+                    <div class="form-group dynamic-field" data-areas="trauma">
+                        <label>Mecanismo de Lesión / Trauma</label>
+                        <div class="option-cards-group" data-input-id="alarma_trauma">
+                            <div class="option-card" data-value="ninguna">
+                                <span class="card-icon">🦴</span>
+                                <div class="card-text">
+                                    <span class="card-title">Lesión Leve / Sin deformidad</span>
+                                    <span class="card-desc">Golpe menor, movilidad articular y sensibilidad conservada</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="moderada">
+                                <span class="card-icon">🟡</span>
+                                <div class="card-text">
+                                    <span class="card-title">Trauma Cerrado / Deformidad Leve</span>
+                                    <span class="card-desc">Sospecha de fractura cerrada, dolor localizado severo o incapacidad funcional</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="severa">
+                                <span class="card-icon">🔴</span>
+                                <div class="card-text">
+                                    <span class="card-title">Fractura Expuesta / Hemorragia Activa</span>
+                                    <span class="card-desc">Hueso expuesto, sangrado arterial profuso o amputación parcial/total</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="alarma_trauma" required disabled>
+                    </div>
+
+                    <!-- Alarmas Obstétricas / Ginecología -->
+                    <div class="form-group dynamic-field" data-areas="gineco">
+                        <label>Estado Obstétrico / Alarmas</label>
+                        <div class="option-cards-group" data-input-id="alarma_obstetrica">
+                            <div class="option-card" data-value="ninguna">
+                                <span class="card-icon">🤰</span>
+                                <div class="card-text">
+                                    <span class="card-title">Gestante Estable / Sin alarma</span>
+                                    <span class="card-desc">Sin sangrado, dolor ni pérdida de fluidos</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="moderada">
+                                <span class="card-icon">🟡</span>
+                                <div class="card-text">
+                                    <span class="card-title">Contracciones Activas / Pérdida de Líquido</span>
+                                    <span class="card-desc">Contracciones regulares dolorosas o salida de líquido amniótico claro</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="severa">
+                                <span class="card-icon">🔴</span>
+                                <div class="card-text">
+                                    <span class="card-title">Sangrado Vaginal Activo / Convulsiones (Eclampsia)</span>
+                                    <span class="card-desc">Sangrado profuso de color rojo brillante o crisis convulsiva obstétrica</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="alarma_obstetrica" required disabled>
                     </div>
 
                     <div class="button-group">

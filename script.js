@@ -105,18 +105,44 @@ class TriageInferenceEngine {
             dolor_pecho,
             tos,
             sintomas_digestivos,
-            // /* NUEVO */ Parámetros adicionales
             edad,
             dolor_eva,
-            dolor_cabeza
+            dolor_cabeza,
+            area_solicitada,
+            sintomas_pediatricos,
+            alarma_trauma,
+            alarma_obstetrica
         } = this.facts;
 
         let result = null;
+        const isPediatric = edad === 'pediatrico';
 
         // HEURÍSTICA DE RESOLUCIÓN DE CONFLICTOS: PRIORIZACIÓN CRÍTICA (SHORT-CIRCUIT)
         
-        // /* NUEVO */ REGLA 1: Hipoxia Crítica (ROJO)
-        if (saturacion_o2 < 90) {
+        // 1. REGLA: ALARMA TRAUMA GRAVE (ROJO)
+        if (area_solicitada === 'trauma' && alarma_trauma === 'severa') {
+            result = {
+                level: "PRIORIDAD I - ROJO",
+                color: "var(--triage-red)",
+                glowColor: "var(--triage-red-glow)",
+                code: "trauma_critico",
+                diagnosis: "🚨 Código Trauma Crítico: Fractura Expuesta / Hemorragia Activa Profusa. Alto riesgo de shock hipovolémico inminente. Compresión, torniquete y cirugía inmediata.",
+                ruleApplied: 'IF (area_solicitada == "trauma" AND alarma_trauma == "severa")\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "TRAUMA CRÍTICO / HEMORRAGIA"'
+            };
+        }
+        // 2. REGLA: ALARMA OBSTÉTRICA GRAVE (ROJO)
+        else if (area_solicitada === 'gineco' && alarma_obstetrica === 'severa') {
+            result = {
+                level: "PRIORIDAD I - ROJO",
+                color: "var(--triage-red)",
+                glowColor: "var(--triage-red-glow)",
+                code: "obstetrico_critico",
+                diagnosis: "🚨 Código Rojo Obstétrico: Sangrado Vaginal Activo Profuso / Crisis Convulsiva (Eclampsia). Amenaza inminente para la vida de la madre y el feto. Traslado urgente a quirófano.",
+                ruleApplied: 'IF (area_solicitada == "gineco" AND alarma_obstetrica == "severa")\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "EMERGENCIA OBSTÉTRICA"'
+            };
+        }
+        // 3. REGLA: Hipoxia Crítica (ROJO)
+        else if (saturacion_o2 < 90) {
             result = {
                 level: "PRIORIDAD I - ROJO",
                 color: "var(--triage-red)",
@@ -126,7 +152,7 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (saturacion_o2 < 90)\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "HIPOXIA CRÍTICA"'
             };
         }
-        // REGLA 2: Código ICTUS (ACV) -> Rojo (Inmediato)
+        // 4. REGLA: Código ICTUS (ACV) -> Rojo (Inmediato)
         else if (equilibrio === "perdida" && (conciencia === "confuso" || conciencia === "inconsciente")) {
             result = {
                 level: "PRIORIDAD I - ROJO",
@@ -137,7 +163,7 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (equilibrio == "perdida" AND conciencia IN ["confuso", "inconsciente"])\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "ACV AGUDO"'
             };
         }
-        // REGLA 3: Código INFARTO (IAM) -> Rojo (Inmediato)
+        // 5. REGLA: Código INFARTO (IAM) -> Rojo (Inmediato)
         else if (dolor_pecho === "si" && (dificultad_respiratoria === true || presion_sistolica < 90 || conciencia === "inconsciente")) {
             result = {
                 level: "PRIORIDAD I - ROJO",
@@ -148,29 +174,40 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (dolor_pecho == "si" AND (dificultad_respiratoria == true OR presion_sistolica < 90 OR conciencia == "inconsciente"))\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "IAM / CRISIS CORONARIA"'
             };
         }
-        // /* NUEVO */ REGLA 4: Sepsis (NARANJA)
-        else if (temperatura > 38.0 && presion_sistolica < 90 && frecuencia_cardiaca > 100) {
+        // 6. REGLA: Pediatría Grave (NARANJA)
+        else if (area_solicitada === 'pediatria' && sintomas_pediatricos === 'severo') {
+            result = {
+                level: "PRIORIDAD II - NARANJA",
+                color: "var(--triage-orange)",
+                glowColor: "var(--triage-orange-glow)",
+                code: "pediatria_severo",
+                diagnosis: "👶 Código Naranja Pediátrico: Deshidratación Grave / Letargia / Signo de Pliegue Positivo. Compromiso hídrico crítico en infantes. Iniciar rehidratación endovenosa urgente.",
+                ruleApplied: 'IF (area_solicitada == "pediatria" AND sintomas_pediatricos == "severo")\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "DESHIDRATACIÓN GRAVE PEDIÁTRICA"'
+            };
+        }
+        // 7. REGLA: Sepsis (NARANJA) - Ajustada para Pediatría
+        else if (temperatura > 38.0 && presion_sistolica < (isPediatric ? 80 : 90) && frecuencia_cardiaca > (isPediatric ? 130 : 100)) {
             result = {
                 level: "PRIORIDAD II - NARANJA",
                 color: "var(--triage-orange)",
                 glowColor: "var(--triage-orange-glow)",
                 code: "sepsis",
                 diagnosis: "🫀 Posible Sepsis: Síndrome de Respuesta Inflamatoria Sistémica (SIRS) activo. Alto riesgo de shock séptico. Hidratación y antibióticos IV inmediatos.",
-                ruleApplied: 'IF (temperatura > 38.0 AND presion_sistolica < 90 AND frecuencia_cardiaca > 100)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "POSIBLE SEPSIS: SIRS ACTIVO"'
+                ruleApplied: `IF (temperatura > 38.0 AND presion_sistolica < ${isPediatric ? 80 : 90} AND frecuencia_cardiaca > ${isPediatric ? 130 : 100})\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "POSIBLE SEPSIS: SIRS ACTIVO"`
             };
         }
-        // /* NUEVO */ REGLA 5: Crisis Hipertensiva (NARANJA)
-        else if (presion_sistolica > 160 && (dolor_cabeza === "severo" || conciencia === "confuso")) {
+        // 8. REGLA: Crisis Hipertensiva (NARANJA) - Ajustada para Pediatría
+        else if (presion_sistolica > (isPediatric ? 130 : 160) && (dolor_cabeza === "severo" || conciencia === "confuso")) {
             result = {
                 level: "PRIORIDAD II - NARANJA",
                 color: "var(--triage-orange)",
                 glowColor: "var(--triage-orange-glow)",
                 code: "crisis_hipertensiva",
-                diagnosis: "🧠 Crisis Hipertensiva urgente. Sospecha de daño en órgano diana. Control de presión guiado y analgésicos de urgencia.",
-                ruleApplied: 'IF (presion_sistolica > 160 AND (dolor_cabeza == "severo" OR conciencia == "confuso"))\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "CRISIS HIPERTENSIVA URGENTE"'
+                diagnosis: `🧠 Crisis Hipertensiva urgente ${isPediatric ? 'Pediátrica' : ''}. Sospecha de daño en órgano diana. Control de presión guiado y analgésicos de urgencia.`,
+                ruleApplied: `IF (presion_sistolica > ${isPediatric ? 130 : 160} AND (dolor_cabeza == "severo" OR conciencia == "confuso"))\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "CRISIS HIPERTENSIVA URGENTE"`
             };
         }
-        // /* NUEVO */ REGLA 6: Crisis Asmática (NARANJA)
+        // 9. REGLA: Crisis Asmática (NARANJA)
         else if (dificultad_respiratoria === true && tos !== "ninguna" && saturacion_o2 < 95) {
             result = {
                 level: "PRIORIDAD II - NARANJA",
@@ -181,7 +218,7 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (dificultad_respiratoria == true AND tos != "ninguna" AND saturacion_o2 < 95)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "CRISIS ASMÁTICA AGUDA"'
             };
         }
-        // REGLA 7: Código NARANJA (IRAG / Neumonía original)
+        // 10. REGLA: Código NARANJA (IRAG / Neumonía original)
         else if (
             (temperatura > 39.0 && presion_sistolica < 90) ||
             (frecuencia_cardiaca > 120 && temperatura > 38.0) ||
@@ -196,7 +233,40 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (temperatura > 39.0 AND presion_sistolica < 90)\n   OR (frecuencia_cardiaca > 120 AND temperatura > 38.0)\n   OR (temperatura > 38.0 AND tos != "ninguna" AND dificultad_respiratoria == true)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "IRAG / NEUMONÍA GRAVE"'
             };
         }
-        // REGLA 8: Código AMARILLO (Dolor Agudo / Crisis / Gastro original)
+        // 11. REGLA: Trauma Cerrado (AMARILLO)
+        else if (area_solicitada === 'trauma' && alarma_trauma === 'moderada') {
+            result = {
+                level: "PRIORIDAD III - AMARILLO",
+                color: "var(--triage-yellow)",
+                glowColor: "var(--triage-yellow-glow)",
+                code: "trauma_moderado",
+                diagnosis: "⚠️ Código Amarillo: Trauma Moderado / Sospecha de Fractura Cerrada / Deformidad Leve. Inmovilización prioritaria y radiología de urgencia.",
+                ruleApplied: 'IF (area_solicitada == "trauma" AND alarma_trauma == "moderada")\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "TRAUMA MODERADO / FRAC. CERRADA"'
+            };
+        }
+        // 12. REGLA: Ginecología Moderada (AMARILLO)
+        else if (area_solicitada === 'gineco' && alarma_obstetrica === 'moderada') {
+            result = {
+                level: "PRIORIDAD III - AMARILLO",
+                color: "var(--triage-yellow)",
+                glowColor: "var(--triage-yellow-glow)",
+                code: "obstetrico_moderado",
+                diagnosis: "⚠️ Código Amarillo Obstétrico: Contracciones Activas / Sospecha de Ruptura de Membranas. Derivar para monitoreo cardiotocográfico y tacto vaginal.",
+                ruleApplied: 'IF (area_solicitada == "gineco" AND alarma_obstetrica == "moderada")\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "TRABAJO PARTO / RPM"'
+            };
+        }
+        // 13. REGLA: Pediatría Moderada (AMARILLO)
+        else if (area_solicitada === 'pediatria' && sintomas_pediatricos === 'moderado') {
+            result = {
+                level: "PRIORIDAD III - AMARILLO",
+                color: "var(--triage-yellow)",
+                glowColor: "var(--triage-yellow-glow)",
+                code: "pediatria_moderado",
+                diagnosis: "⚠️ Código Amarillo Pediátrico: Deshidratación Leve-Moderada / Irritabilidad. Iniciar terapia de rehidratación oral supervisada con sales de rehidratación oral.",
+                ruleApplied: 'IF (area_solicitada == "pediatria" AND sintomas_pediatricos == "moderado")\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "DESHIDRATACIÓN LEVE / IRRITABILIDAD"'
+            };
+        }
+        // 14. REGLA: Código AMARILLO (Dolor Agudo / Crisis / Gastro original)
         else if (
             (escala_dolor > 7 && presion_sistolica > 160) ||
             (sintomas_digestivos === "nauseas" && temperatura > 38.0) ||
@@ -211,13 +281,13 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (escala_dolor > 7 AND presion_sistolica > 160)\n   OR (sintomas_digestivos IN ["nauseas", "vomitos"] AND temperatura > 38.0)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "GASTROENTERITIS / DOLOR AGUDO"'
             };
         }
-        // REGLA 9: Código VERDE (Estable)
+        // 15. REGLA: Código VERDE (Estable)
         else if (
             temperatura < 37.5 &&
             escala_dolor < 3 &&
             saturacion_o2 > 95 &&
             conciencia === "alerta" &&
-            equilibrio === "normal" &&
+            (area_solicitada === 'pediatria' || area_solicitada === 'gineco' || equilibrio === "normal") &&
             dificultad_respiratoria === false &&
             dolor_pecho === "no" &&
             tos === "ninguna" &&
@@ -234,7 +304,7 @@ class TriageInferenceEngine {
                 ruleApplied: 'IF (temperatura < 37.5 AND escala_dolor < 3 AND saturacion_o2 > 95 AND todas_las_demas_variables_estables_o_negativas)\nTHEN triage = "VERDE (PRIORIDAD IV)" AND diagnostico = "PACIENTE CLÍNICAMENTE ESTABLE"'
             };
         }
-        // REGLA 10: REGLA POR DEFECTO (Inespecífico)
+        // 16. REGLA POR DEFECTO (Inespecífico)
         else {
             result = {
                 level: "PRIORIDAD III - AMARILLO",
@@ -246,7 +316,7 @@ class TriageInferenceEngine {
             };
         }
 
-        // /* NUEVO */ REGLA 11: Adulto Mayor Vulnerable (ESCALACIÓN)
+        // /* NUEVO */ REGLA 17: Adulto Mayor Vulnerable (ESCALACIÓN)
         if (result.level !== "PRIORIDAD I - ROJO" && edad === "adulto_mayor" && (temperatura > 38.0 || presion_sistolica < 90 || presion_sistolica > 140)) {
             const originalLevel = result.level;
             if (result.level === "PRIORIDAD IV - VERDE") {
@@ -282,6 +352,81 @@ function getAreaLabel(area) {
     return mapping[area] || area || 'No especificada';
 }
 
+/**
+ * Adapta dinámicamente el Wizard y sus campos habilitando/deshabilitando y mostrando/ocultando
+ * según el área seleccionada, mitigando la carga cognitiva y asegurando validación impecable.
+ */
+function updateDynamicFields(area) {
+    if (!area) return;
+    
+    // 1. Mostrar/Ocultar y habilitar/deshabilitar los form-groups marcados con la clase dynamic-field
+    const dynamicFields = document.querySelectorAll('.dynamic-field');
+    dynamicFields.forEach(group => {
+        const allowedAreas = group.getAttribute('data-areas');
+        if (!allowedAreas) return;
+        
+        const areasArray = allowedAreas.split(',').map(a => a.trim());
+        const input = group.querySelector('input[type="hidden"], input[type="number"]');
+        
+        if (areasArray.includes(area)) {
+            // Mostrar y Habilitar
+            group.classList.remove('hidden-field');
+            if (input) {
+                input.removeAttribute('disabled');
+            }
+        } else {
+            // Ocultar, Deshabilitar y Limpiar
+            group.classList.add('hidden-field');
+            if (input) {
+                input.setAttribute('disabled', 'true');
+                input.value = ""; // Limpiar valor previo
+                
+                // Deseleccionar tarjetas visualmente si es grupo de tarjetas
+                const cardsGroup = group.querySelector('.option-cards-group');
+                if (cardsGroup) {
+                    cardsGroup.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                    cardsGroup.style.outline = 'none';
+                }
+            }
+        }
+    });
+
+    // 2. Restricciones e invariantes de Edad en Pediatría
+    const edadInput = document.getElementById('edad');
+    const edadGroup = edadInput ? edadInput.closest('.form-group') : null;
+    
+    if (area === 'pediatria') {
+        // Fijar y auto-seleccionar Pediátrico
+        if (edadInput) {
+            edadInput.value = 'pediatrico';
+        }
+        if (edadGroup) {
+            // Ocultar tarjetas de Adulto y Adulto Mayor
+            edadGroup.querySelectorAll('.option-card').forEach(c => {
+                const val = c.getAttribute('data-value');
+                if (val !== 'pediatrico') {
+                    c.classList.add('hidden-field');
+                } else {
+                    c.classList.add('selected');
+                    c.classList.remove('hidden-field');
+                }
+            });
+        }
+    } else {
+        // Desbloquear selección de edad habitual
+        if (edadGroup) {
+            edadGroup.querySelectorAll('.option-card').forEach(c => {
+                c.classList.remove('hidden-field');
+            });
+            // Si estaba fijado a pediátrico pero ahora no es pediatría, limpiarlo para que lo elija el usuario
+            if (edadInput && edadInput.value === 'pediatrico' && area !== 'pediatria') {
+                edadInput.value = '';
+                edadGroup.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            }
+        }
+    }
+}
+
 // Variables globales para almacenar el triage activo actual
 let currentTriageColor = "var(--primary-color)";
 let currentTriageText = "PRIORIDAD V - VERDE";
@@ -304,6 +449,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             group.classList.remove('invalid-shake');
             group.style.outline = 'none';
+
+            // Adaptar dinámicamente si se elige área
+            if (inputId === 'area_solicitada') {
+                updateDynamicFields(card.getAttribute('data-value'));
+            }
 
             // Sonido de clic interactivo
             AudioFX.playSelect();
@@ -348,8 +498,8 @@ function nextStep(current, next) {
     const currentStepDiv = document.getElementById(`step-${current}`);
     let allValid = true;
 
-    // A. Validar inputs de texto
-    const textInputs = currentStepDiv.querySelectorAll('input[type="text"]');
+    // A. Validar inputs de texto (excluyendo deshabilitados por especialidad)
+    const textInputs = currentStepDiv.querySelectorAll('input[type="text"]:not(:disabled)');
     textInputs.forEach(input => {
         const wrapper = input.closest('.input-wrapper') || input;
         if (!input.value.trim()) {
@@ -368,8 +518,8 @@ function nextStep(current, next) {
         }
     });
 
-    // B. Validar inputs numéricos de Constantes Vitales
-    const numericInputs = currentStepDiv.querySelectorAll('input[type="number"]');
+    // B. Validar inputs numéricos de Constantes Vitales (excluyendo deshabilitados)
+    const numericInputs = currentStepDiv.querySelectorAll('input[type="number"]:not(:disabled)');
     numericInputs.forEach(input => {
         const wrapper = input.closest('.vital-input-wrapper') || input;
         const val = parseFloat(input.value);
@@ -392,8 +542,8 @@ function nextStep(current, next) {
         }
     });
 
-    // C. Validar inputs ocultos de Option Cards
-    const hiddenInputs = currentStepDiv.querySelectorAll('input[type="hidden"]');
+    // C. Validar inputs ocultos de Option Cards (excluyendo deshabilitados)
+    const hiddenInputs = currentStepDiv.querySelectorAll('input[type="hidden"]:not(:disabled)');
     hiddenInputs.forEach(input => {
         const group = currentStepDiv.querySelector(`.option-cards-group[data-input-id="${input.id}"]`);
         if (!input.value) {
@@ -436,35 +586,60 @@ function nextStep(current, next) {
 function evaluateTriage() {
     const patientName = document.getElementById('paciente-nombre').value.trim() || "Paciente Anónimo";
     
-    // /* NUEVO */ Mapear escala EVA a valor numérico para compatibilidad
+    // Validar de forma robusta los campos activos del paso 3 usando el validador estándar
+    const step3Div = document.getElementById('step-3');
+    let step3Valid = true;
+    
+    const hiddenInputsStep3 = step3Div.querySelectorAll('input[type="hidden"]:not(:disabled)');
+    hiddenInputsStep3.forEach(input => {
+        const group = step3Div.querySelector(`.option-cards-group[data-input-id="${input.id}"]`);
+        if (!input.value) {
+            step3Valid = false;
+            if (group) {
+                group.classList.add('invalid-shake');
+                group.style.outline = '2px solid var(--triage-red)';
+                AudioFX.playError();
+                setTimeout(() => { group.classList.remove('invalid-shake'); }, 400);
+            }
+        }
+    });
+
+    if (!step3Valid) {
+        return; // Detiene la evaluación si faltan campos requeridos para esta especialidad
+    }
+
+    // Mapear escala EVA a valor numérico para compatibilidad
     const dolorEvaMap = { 'sin_dolor': 0, 'leve': 2, 'moderado': 5, 'severo': 8 };
     const escalaDolorVal = dolorEvaMap[document.getElementById('dolor_eva').value] || 0;
 
-    const facts = {
-        area_solicitada: document.getElementById('area_solicitada').value,
-        conciencia: document.getElementById('conciencia').value,
-        equilibrio: document.getElementById('equilibrio').value,
-        presion_sistolica: parseInt(document.getElementById('presion_sistolica').value),
-        temperatura: parseFloat(document.getElementById('temperatura').value),
-        saturacion_o2: parseInt(document.getElementById('saturacion_o2').value),
-        frecuencia_cardiaca: parseInt(document.getElementById('frecuencia_cardiaca').value),
-        escala_dolor: escalaDolorVal,
-        dificultad_respiratoria: document.getElementById('dificultad_respiratoria').value === 'true',
-        dolor_pecho: document.getElementById('dolor_pecho').value,
-        tos: document.getElementById('tos').value,
-        sintomas_digestivos: document.getElementById('sintomas_digestivos').value,
-        // /* NUEVO */ Parámetros ampliados
-        edad: document.getElementById('edad').value,
-        dolor_eva: document.getElementById('dolor_eva').value,
-        dolor_cabeza: document.getElementById('dolor_cabeza').value
+    // Obtener valores de forma segura (si están deshabilitados, asumen un valor por defecto)
+    const getVal = (id, fallback = '') => {
+        const el = document.getElementById(id);
+        return (el && !el.disabled) ? el.value : fallback;
     };
 
-    // Validar paso 3
-    const dificultadRaw = document.getElementById('dificultad_respiratoria').value;
-    if (!dificultadRaw || !facts.dolor_pecho || !facts.tos || !facts.sintomas_digestivos || !facts.dolor_eva || !facts.dolor_cabeza) {
-        nextStep(3, 3);
-        return;
-    }
+    const facts = {
+        area_solicitada: getVal('area_solicitada'),
+        conciencia: getVal('conciencia'),
+        equilibrio: getVal('equilibrio', 'normal'),
+        presion_sistolica: parseInt(getVal('presion_sistolica', '120')),
+        temperatura: parseFloat(getVal('temperatura', '36.5')),
+        saturacion_o2: parseInt(getVal('saturacion_o2', '98')),
+        frecuencia_cardiaca: parseInt(getVal('frecuencia_cardiaca', '80')),
+        escala_dolor: escalaDolorVal,
+        dificultad_respiratoria: getVal('dificultad_respiratoria') === 'true',
+        dolor_pecho: getVal('dolor_pecho', 'no'),
+        tos: getVal('tos', 'ninguna'),
+        sintomas_digestivos: getVal('sintomas_digestivos', 'ninguno'),
+        // Parámetros ampliados
+        edad: getVal('edad', 'adulto'),
+        dolor_eva: getVal('dolor_eva', 'sin_dolor'),
+        dolor_cabeza: getVal('dolor_cabeza', 'ninguno'),
+        // Nuevos parámetros específicos de especialidad
+        sintomas_pediatricos: getVal('sintomas_pediatricos', 'normal'),
+        alarma_trauma: getVal('alarma_trauma', 'ninguna'),
+        alarma_obstetrica: getVal('alarma_obstetrica', 'ninguna')
+    };
 
     // --- FUTURISTIC LOADER SEQUENCE ---
     const loader = document.getElementById('ai-loader');
@@ -496,10 +671,11 @@ function evaluateTriage() {
 }
 
 /**
- * /* NUEVO */ Calcula el Score NEWS2 Simplificado (0 a 20 pts)
+ * Calcula el Score NEWS2 Simplificado (Ajustado a PEWS si es pediátrico)
  */
 function calculateNEWS2(facts) {
     let score = 0;
+    const isPediatric = facts.edad === 'pediatrico';
     
     // 1. Frecuencia Respiratoria / Dificultad
     if (facts.dificultad_respiratoria) {
@@ -513,20 +689,35 @@ function calculateNEWS2(facts) {
     else if (spo2 >= 92) score += 2;
     else score += 3; // < 92%
     
-    // 3. Presión Sistólica
+    // 3. Presión Sistólica (Ajustado si es pediátrico)
     const bps = facts.presion_sistolica;
-    if (bps <= 90 || bps >= 220) score += 3;
-    else if (bps <= 100) score += 2;
-    else if (bps <= 110) score += 1;
-    else score += 0; // 111 - 219
+    if (isPediatric) {
+        if (bps <= 75 || bps >= 145) score += 3;
+        else if (bps <= 85) score += 2;
+        else if (bps <= 90) score += 1;
+        else score += 0;
+    } else {
+        if (bps <= 90 || bps >= 220) score += 3;
+        else if (bps <= 100) score += 2;
+        else if (bps <= 110) score += 1;
+        else score += 0; // 111 - 219
+    }
     
-    // 4. Frecuencia Cardíaca
+    // 4. Frecuencia Cardíaca (Ajustado si es pediátrico)
     const hr = facts.frecuencia_cardiaca;
-    if (hr <= 40 || hr >= 131) score += 3;
-    else if (hr <= 50) score += 1;
-    else if (hr >= 111 && hr <= 130) score += 2;
-    else if (hr >= 91 && hr <= 110) score += 1;
-    else score += 0; // 51 - 90
+    if (isPediatric) {
+        if (hr <= 50 || hr >= 160) score += 3;
+        else if (hr <= 70) score += 1;
+        else if (hr >= 131 && hr <= 150) score += 2;
+        else if (hr >= 111 && hr <= 130) score += 1;
+        else score += 0;
+    } else {
+        if (hr <= 40 || hr >= 131) score += 3;
+        else if (hr <= 50) score += 1;
+        else if (hr >= 111 && hr <= 130) score += 2;
+        else if (hr >= 91 && hr <= 110) score += 1;
+        else score += 0; // 51 - 90
+    }
     
     // 5. Temperatura Corporal
     const temp = facts.temperatura;
@@ -692,6 +883,22 @@ function resetForm() {
     });
     document.querySelectorAll('.option-card').forEach(card => {
         card.classList.remove('selected');
+        card.classList.remove('hidden-field'); // Desocultar tarjetas de edad
+    });
+
+    // Ocultar y deshabilitar los campos dinámicos específicos por defecto al reiniciar
+    document.querySelectorAll('.dynamic-field').forEach(group => {
+        const allowedAreas = group.getAttribute('data-areas');
+        const input = group.querySelector('input');
+        
+        // Dejar sólo los comunes de Urgencias habilitados al inicio
+        if (allowedAreas && !allowedAreas.split(',').map(a => a.trim()).includes('urgencias')) {
+            group.classList.add('hidden-field');
+            if (input) input.setAttribute('disabled', 'true');
+        } else {
+            group.classList.remove('hidden-field');
+            if (input) input.removeAttribute('disabled');
+        }
     });
 
     document.getElementById('result-container').classList.add('hidden');
@@ -1070,6 +1277,14 @@ function renderHistory() {
             if (item.facts.tos === 'flema') symptomPills.push('🤢 Tos Flema');
             if (item.facts.sintomas_digestivos === 'nauseas') symptomPills.push('🤢 Náuseas/Vómitos');
             if (item.facts.sintomas_digestivos === 'vomitos') symptomPills.push('🤮 Vómitos');
+            
+            // Especialidades
+            if (item.facts.sintomas_pediatricos === 'moderado') symptomPills.push('🟡 Deshid. Leve');
+            if (item.facts.sintomas_pediatricos === 'severo') symptomPills.push('🔴 Deshid. Grave');
+            if (item.facts.alarma_trauma === 'moderada') symptomPills.push('🟡 Trauma Cerr.');
+            if (item.facts.alarma_trauma === 'severa') symptomPills.push('🔴 Trauma Exp.');
+            if (item.facts.alarma_obstetrica === 'moderada') symptomPills.push('🟡 Contracciones');
+            if (item.facts.alarma_obstetrica === 'severa') symptomPills.push('🔴 Alarma Obst.');
         }
         
         const reqArea = item.facts ? getAreaLabel(item.facts.area_solicitada) : 'No especificada';

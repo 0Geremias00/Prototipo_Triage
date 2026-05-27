@@ -1661,3 +1661,8 @@ body, header, main, section, .glass-panel, input, button, .option-card, .tab-btn
     gap: 0.25rem;
     transition: color 0.3s ease;
 }
+
+/* Ocultado dinámico de campos clínicos específicos */
+.hidden-field {
+    display: none !important;
+}
