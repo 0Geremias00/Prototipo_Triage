@@ -3,20 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Triage Assistant | Premium</title>
+    <title>AI Triage Assistant | Premium Clinical Support</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Background Elements -->
+    <!-- Background Sci-Fi Glowing Blurs -->
     <div class="bg-blur circle-1"></div>
     <div class="bg-blur circle-2"></div>
     <div class="bg-blur circle-3"></div>
 
+    <!-- Header Section with Pulsing Medical-Neural SVG -->
     <header class="header glass-panel">
         <div class="header-content">
             <div class="logo">
-                <img src="file:///C:/Users/user/.gemini/antigravity/brain/c3dd78d4-3e24-4a98-ab61-3a8ee9a7b81a/triage_hero_bg_1778861193916.png" alt="AI Medical Logo" class="hero-img">
+                <svg class="hero-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <filter id="logo-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="4" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                        <linearGradient id="primary-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#3b82f6" />
+                            <stop offset="100%" stop-color="#8b5cf6" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Background Circle -->
+                    <circle cx="50" cy="50" r="45" stroke="url(#primary-gradient)" stroke-width="1.5" opacity="0.3" stroke-dasharray="4 2" />
+                    <!-- ECG Heartbeat Pulse -->
+                    <path d="M 10 50 L 32 50 L 37 32 L 43 72 L 48 22 L 53 58 L 58 50 L 90 50" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#logo-glow)" class="ecg-line" />
+                    <!-- Medical Glowing Cross -->
+                    <path d="M 46 42 H 39 V 58 H 46 V 65 H 54 V 58 H 61 V 42 H 54 V 35 H 46 Z" fill="url(#primary-gradient)" filter="url(#logo-glow)" opacity="0.8" />
+                </svg>
             </div>
             <div class="header-text">
                 <h1>AI Triage Assistant</h1>
@@ -26,42 +44,109 @@
     </header>
 
     <main class="container">
-        <section id="wizard-container" class="glass-panel">
+        <!-- Tab Navigation (HCI Improvement) -->
+        <nav class="tab-navigation glass-panel">
+            <button class="tab-btn active" id="tab-eval" onclick="switchTab('eval')">
+                <span class="tab-icon">🩺</span> Evaluación de Paciente
+            </button>
+            <button class="tab-btn" id="tab-hist" onclick="switchTab('hist')">
+                <span class="tab-icon">📂</span> Historial de Triages
+                <span class="badge hidden" id="history-badge">0</span>
+            </button>
+        </nav>
+
+        <!-- Main Triage Form (Wizard) Container -->
+        <section id="wizard-container" class="glass-panel main-view">
+            <!-- Progress Bar -->
             <div class="progress-bar">
                 <div class="progress" id="progress"></div>
             </div>
             
-            <form id="triage-form">
-                <!-- Paso 1: Evaluacion General -->
+            <form id="triage-form" onsubmit="event.preventDefault();">
+                <!-- Paso 1: Datos y Neurología/Respiratorio -->
                 <div class="step active" id="step-1">
                     <h2>🧠 Evaluación Neurológica & Respiratoria</h2>
+
+                    <!-- Patient Identification -->
+                    <div class="form-group first-group">
+                        <label for="paciente-nombre">Nombre o ID del Paciente</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="paciente-nombre" placeholder="E.g., Juan Pérez o Paciente #204..." required>
+                        </div>
+                    </div>
                     
+                    <!-- Estado de Conciencia -->
                     <div class="form-group">
-                        <label for="conciencia">Estado de Conciencia</label>
-                        <select id="conciencia" required>
-                            <option value="" disabled selected>Seleccione el estado...</option>
-                            <option value="alerta">Alerta y Orientado</option>
-                            <option value="confuso">Confuso / Desorientado</option>
-                            <option value="inconsciente">Inconsciente / No responde</option>
-                        </select>
+                        <label>Estado de Conciencia</label>
+                        <div class="option-cards-group" data-input-id="conciencia">
+                            <div class="option-card" data-value="alerta">
+                                <span class="card-icon">🟢</span>
+                                <div class="card-text">
+                                    <span class="card-title">Alerta y Orientado</span>
+                                    <span class="card-desc">Responde a estímulos de forma coherente</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="confuso">
+                                <span class="card-icon">🟡</span>
+                                <div class="card-text">
+                                    <span class="card-title">Confuso / Desorientado</span>
+                                    <span class="card-desc">Pérdida temporal de tiempo, espacio o persona</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="inconsciente">
+                                <span class="card-icon">🔴</span>
+                                <div class="card-text">
+                                    <span class="card-title">Inconsciente</span>
+                                    <span class="card-desc">No responde a estímulos verbales o físicos</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="conciencia" required>
                     </div>
 
+                    <!-- Equilibrio y Visión -->
                     <div class="form-group">
-                        <label for="equilibrio">Equilibrio y Visión</label>
-                        <select id="equilibrio" required>
-                            <option value="" disabled selected>Seleccione...</option>
-                            <option value="normal">Normal</option>
-                            <option value="perdida">Pérdida repentina de equilibrio o visión</option>
-                        </select>
+                        <label>Equilibrio y Visión</label>
+                        <div class="option-cards-group row-layout" data-input-id="equilibrio">
+                            <div class="option-card" data-value="normal">
+                                <span class="card-icon">👁️</span>
+                                <div class="card-text">
+                                    <span class="card-title">Normal</span>
+                                    <span class="card-desc">Visión y balance estables</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="perdida">
+                                <span class="card-icon">⚠️</span>
+                                <div class="card-text">
+                                    <span class="card-title">Pérdida Repentina</span>
+                                    <span class="card-desc">Problemas agudos de equilibrio/visión</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="equilibrio" required>
                     </div>
 
+                    <!-- Dificultad Respiratoria -->
                     <div class="form-group">
-                        <label for="respiracion">Dificultad Respiratoria</label>
-                        <select id="respiracion" required>
-                            <option value="" disabled selected>Seleccione el estado...</option>
-                            <option value="no">Respiración Normal</option>
-                            <option value="si">Dificultad Severa / Asfixia</option>
-                        </select>
+                        <label>Dificultad Respiratoria</label>
+                        <div class="option-cards-group row-layout" data-input-id="respiracion">
+                            <div class="option-card" data-value="no">
+                                <span class="card-icon">🫁</span>
+                                <div class="card-text">
+                                    <span class="card-title">Respiración Normal</span>
+                                    <span class="card-desc">Sin disnea ni esfuerzo respiratorio</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="si">
+                                <span class="card-icon">🚨</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dificultad Severa</span>
+                                    <span class="card-desc">Asfixia, disnea o cianosis evidente</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="respiracion" required>
                     </div>
 
                     <button type="button" class="btn btn-primary" onclick="nextStep(1, 2)">Continuar Evaluación <span>&rarr;</span></button>
@@ -71,32 +156,77 @@
                 <div class="step" id="step-2">
                     <h2>🫀 Constantes Vitales y Dolor</h2>
                     
+                    <!-- Temperatura Corporal -->
                     <div class="form-group">
-                        <label for="temperatura">Temperatura Corporal</label>
-                        <select id="temperatura" required>
-                            <option value="" disabled selected>Seleccione la temperatura...</option>
-                            <option value="normal">Normal (36.5 - 37.5°C)</option>
-                            <option value="fiebre">Fiebre (> 38.0°C)</option>
-                        </select>
+                        <label>Temperatura Corporal</label>
+                        <div class="option-cards-group row-layout" data-input-id="temperatura">
+                            <div class="option-card" data-value="normal">
+                                <span class="card-icon">🌡️</span>
+                                <div class="card-text">
+                                    <span class="card-title">Normal</span>
+                                    <span class="card-desc">Temperatura &le; 37.9 °C</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="fiebre">
+                                <span class="card-icon">🔥</span>
+                                <div class="card-text">
+                                    <span class="card-title">Fiebre</span>
+                                    <span class="card-desc">Temperatura &ge; 38.0 °C</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="temperatura" required>
                     </div>
 
+                    <!-- Presión Arterial -->
                     <div class="form-group">
-                        <label for="presion">Presión Arterial</label>
-                        <select id="presion" required>
-                            <option value="" disabled selected>Seleccione la presión...</option>
-                            <option value="normal">Normal / Estable</option>
-                            <option value="baja">Baja (Hipotensión)</option>
-                            <option value="alta">Alta (Hipertensión)</option>
-                        </select>
+                        <label>Presión Arterial</label>
+                        <div class="option-cards-group" data-input-id="presion">
+                            <div class="option-card" data-value="normal">
+                                <span class="card-icon">🩺</span>
+                                <div class="card-text">
+                                    <span class="card-title">Normal / Estable</span>
+                                    <span class="card-desc">Valores fisiológicos estándar</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="alta">
+                                <span class="card-icon">📈</span>
+                                <div class="card-text">
+                                    <span class="card-title">Presión Alta</span>
+                                    <span class="card-desc">Crisis hipertensiva sospechosa</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="baja">
+                                <span class="card-icon">📉</span>
+                                <div class="card-text">
+                                    <span class="card-title">Presión Baja</span>
+                                    <span class="card-desc">Signo de shock o colapso hemodinámico</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="presion" required>
                     </div>
 
+                    <!-- Dolor en Pecho o Brazo Izquierdo -->
                     <div class="form-group">
-                        <label for="dolor_pecho">Dolor en Pecho o Brazo Izquierdo</label>
-                        <select id="dolor_pecho" required>
-                            <option value="" disabled selected>Seleccione...</option>
-                            <option value="no">Ninguno / Otro tipo de dolor</option>
-                            <option value="si">Sí, dolor opresivo irradiado</option>
-                        </select>
+                        <label>Dolor en Pecho / Brazo Izquierdo</label>
+                        <div class="option-cards-group row-layout" data-input-id="dolor_pecho">
+                            <div class="option-card" data-value="no">
+                                <span class="card-icon">🛡️</span>
+                                <div class="card-text">
+                                    <span class="card-title">Ausente / Otro</span>
+                                    <span class="card-desc">Ninguno o dolor localizado leve</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="si">
+                                <span class="card-icon">💔</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dolor Opresivo</span>
+                                    <span class="card-desc">Dolor en pecho irradiado a cuello/brazo</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="dolor_pecho" required>
                     </div>
 
                     <div class="button-group">
@@ -109,23 +239,55 @@
                 <div class="step" id="step-3">
                     <h2>🦠 Síntomas Específicos</h2>
                     
+                    <!-- Tos y Vías Respiratorias -->
                     <div class="form-group">
-                        <label for="tos">Tos y Vías Respiratorias</label>
-                        <select id="tos" required>
-                            <option value="" disabled selected>Seleccione...</option>
-                            <option value="ninguna">Ninguna tos</option>
-                            <option value="seca">Tos seca</option>
-                            <option value="flema">Tos persistente con flema</option>
-                        </select>
+                        <label>Tos y Vías Respiratorias</label>
+                        <div class="option-cards-group" data-input-id="tos">
+                            <div class="option-card" data-value="ninguna">
+                                <span class="card-icon">💨</span>
+                                <div class="card-text">
+                                    <span class="card-title">Ninguna / Ausente</span>
+                                    <span class="card-desc">Vías respiratorias despejadas</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="seca">
+                                <span class="card-icon">😷</span>
+                                <div class="card-text">
+                                    <span class="card-title">Tos Seca</span>
+                                    <span class="card-desc">Irritativa, persistente y sin expectoración</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="flema">
+                                <span class="card-icon">🤢</span>
+                                <div class="card-text">
+                                    <span class="card-title">Tos Productiva</span>
+                                    <span class="card-desc">Persistente con expectoración de flema</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tos" required>
                     </div>
 
+                    <!-- Problemas Digestivos -->
                     <div class="form-group">
-                        <label for="digestivo">Problemas Digestivos</label>
-                        <select id="digestivo" required>
-                            <option value="" disabled selected>Seleccione...</option>
-                            <option value="ninguno">Ninguno</option>
-                            <option value="nauseas">Náuseas, Vómitos o Diarrea</option>
-                        </select>
+                        <label>Problemas Digestivos</label>
+                        <div class="option-cards-group row-layout" data-input-id="digestivo">
+                            <div class="option-card" data-value="ninguno">
+                                <span class="card-icon">🥗</span>
+                                <div class="card-text">
+                                    <span class="card-title">Ninguno</span>
+                                    <span class="card-desc">Sistema digestivo normal</span>
+                                </div>
+                            </div>
+                            <div class="option-card warning-card" data-value="nauseas">
+                                <span class="card-icon">🤢</span>
+                                <div class="card-text">
+                                    <span class="card-title">Náuseas, Vómitos / Diarrea</span>
+                                    <span class="card-desc">Gastrointestinal agudo activo</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="digestivo" required>
                     </div>
 
                     <div class="button-group">
@@ -136,29 +298,157 @@
             </form>
         </section>
 
-        <!-- Resultados -->
-        <section id="result-container" class="glass-panel hidden">
+        <!-- Evaluation Results Screen -->
+        <section id="result-container" class="glass-panel hidden main-view">
             <div class="result-header">
-                <img src="file:///C:/Users/user/.gemini/antigravity/brain/c3dd78d4-3e24-4a98-ab61-3a8ee9a7b81a/triage_ai_assistant_1778861208473.png" alt="AI Analysis" class="ai-avatar">
-                <h2>Análisis Completado</h2>
+                <!-- Glowing Brain Hologram (Interactive SVG) -->
+                <div class="ai-avatar-container">
+                    <svg class="ai-avatar-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="brain-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="5" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                            <radialGradient id="avatar-bg" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="rgba(139, 92, 246, 0.25)" />
+                                <stop offset="100%" stop-color="rgba(15, 23, 42, 0)" />
+                            </radialGradient>
+                        </defs>
+                        <!-- Background Shadow Glow -->
+                        <circle cx="60" cy="60" r="50" fill="url(#avatar-bg)" />
+                        <circle cx="60" cy="60" r="48" stroke="rgba(139, 92, 246, 0.2)" stroke-width="0.75" stroke-dasharray="5 5" />
+                        <!-- Brain Grid Matrix -->
+                        <g class="brain-graphics" filter="url(#brain-glow)" id="glowing-brain">
+                            <!-- Left Hemisphere -->
+                            <path d="M 60 25 C 40 25 32 35 32 50 C 32 65 44 70 44 80 C 44 90 51 95 60 95" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8" />
+                            <!-- Right Hemisphere -->
+                            <path d="M 60 25 C 80 25 88 35 88 50 C 88 65 76 70 76 80 C 76 90 69 95 60 95" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8" />
+                            <!-- Stem -->
+                            <line x1="60" y1="25" x2="60" y2="95" stroke="#8b5cf6" stroke-width="2.5" opacity="0.6" />
+                            <!-- Glowing Synapses -->
+                            <circle cx="60" cy="25" r="4" fill="#a78bfa" class="node-pulse" />
+                            <circle cx="32" cy="50" r="4" fill="#3b82f6" class="node-pulse" style="animation-delay: 0.3s" />
+                            <circle cx="88" cy="50" r="4" fill="#ef4444" class="node-pulse" style="animation-delay: 0.6s" />
+                            <circle cx="44" cy="70" r="3.5" fill="#10b981" class="node-pulse" style="animation-delay: 0.9s" />
+                            <circle cx="76" cy="70" r="3.5" fill="#f59e0b" class="node-pulse" style="animation-delay: 1.2s" />
+                            <circle cx="60" cy="95" r="4.5" fill="#8b5cf6" class="node-pulse" />
+                            <!-- Synapse Connections -->
+                            <path d="M 32 50 Q 48 55 60 25 M 88 50 Q 72 55 60 25" stroke="rgba(167, 139, 250, 0.25)" stroke-width="0.75" fill="none" />
+                            <path d="M 32 50 Q 44 65 60 95 M 88 50 Q 76 65 60 95" stroke="rgba(167, 139, 250, 0.25)" stroke-width="0.75" fill="none" />
+                        </g>
+                    </svg>
+                </div>
+                <h2>Análisis de Triage Completado</h2>
+                <div class="patient-result-tag" id="result-patient-name">Paciente: <span>Juan Pérez</span></div>
             </div>
             
+            <!-- Dynamic Glowing Triage Card -->
             <div id="triage-result" class="result-box glow-effect">
-                <!-- Contenido dinámico desde JS -->
+                PRIORIDAD I - ROJO
             </div>
 
+            <!-- Specific Pathology & Clinical Warnings -->
             <div id="disease-diagnosis" class="disease-box">
-                <!-- Diagnóstico específico (ACV, Infarto, etc) -->
+                ⚠️ ALERTA CÓDIGO ICTUS: Posible Accidente Cerebrovascular (ACV). Daño neurológico agudo inminente.
             </div>
             
-            <div class="rules-applied hidden">
-                <h3><span class="icon">🔬</span> Lógica de Inferencia:</h3>
-                <code id="rule-used"></code>
+            <!-- Recommendations & Actions Trigger (HCI Enhancement) -->
+            <div class="clinical-action-block">
+                <button type="button" class="btn btn-action" onclick="openRecommendations()">
+                    📋 Ver Protocolo de Acción Inmediata
+                </button>
+            </div>
+
+            <!-- Inferences Applied Toggle -->
+            <div class="rules-applied">
+                <div class="rules-header" onclick="toggleRulesUsed()">
+                    <h3>🔬 Ver Motor de Inferencia Lógica <span>[+]</span></h3>
+                </div>
+                <div id="rules-content" class="rules-content-body hidden">
+                    <code id="rule-used"></code>
+                </div>
             </div>
 
             <button class="btn btn-primary full-width mt-4" onclick="resetForm()">Evaluar Nuevo Paciente 🔄</button>
         </section>
+
+        <!-- Patient History & Database Section (HCI Enhancement) -->
+        <section id="history-container" class="glass-panel main-view hidden">
+            <div class="history-header">
+                <div class="history-title-block">
+                    <h2>📂 Historial de Triages Clínicos</h2>
+                    <p>Historial local y permanente de evaluaciones realizadas en este turno.</p>
+                </div>
+                <button class="btn btn-primary btn-new-triage" onclick="startNewEvaluationFromHistory()">
+                    ➕ Nuevo Diagnóstico
+                </button>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="history-controls">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="history-search" placeholder="Buscar paciente por nombre..." oninput="renderHistory()">
+                </div>
+                <button class="btn-clear" onclick="clearHistory()">🧹 Limpiar Todo</button>
+            </div>
+
+            <!-- History List -->
+            <div class="history-list" id="history-list-view">
+                <!-- Dynamic cards populated by script.js -->
+                <div class="empty-state">
+                    <span>🩺</span>
+                    <p>No hay evaluaciones de triage registradas hoy.</p>
+                    <button class="btn btn-primary mt-4" style="width: auto; padding: 0.8rem 1.5rem;" onclick="startNewEvaluationFromHistory()">
+                        ➕ Nuevo Diagnóstico
+                    </button>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <!-- Interactive Clinical Protocol Recommendations Modal (HCI & Usability Improvement) -->
+    <div id="recommendations-modal" class="modal-overlay hidden" onclick="closeRecommendationsOnOverlay(event)">
+        <div class="modal-content glass-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button class="close-btn" onclick="closeRecommendations()">&times;</button>
+            
+            <div class="modal-header">
+                <span id="modal-priority-icon" class="modal-icon">🚨</span>
+                <div>
+                    <h2 id="modal-title">Protocolo de Emergencia</h2>
+                    <p id="modal-subtitle">Directivas de intervención médica inmediata</p>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <div class="protocol-section">
+                    <h3>🕒 Tiempo Objetivo de Atención</h3>
+                    <div class="time-badge" id="modal-target-time">Inmediata (0 minutos)</div>
+                </div>
+
+                <div class="protocol-section">
+                    <h3>🛠️ Acciones Inmediatas de Enfermería</h3>
+                    <ul class="checklist-items" id="modal-actions-list">
+                        <li>Canalizar vía periférica gruesa.</li>
+                        <li>Iniciar monitorización de signos vitales continuos.</li>
+                        <li>Administrar oxígeno por cánula nasal si sat &lt; 94%.</li>
+                        <li>Llamar inmediatamente al médico de guardia y activar código de emergencia.</li>
+                    </ul>
+                </div>
+
+                <div class="protocol-section">
+                    <h3>⚠️ Señales de Alarma Críticas</h3>
+                    <div class="warning-alert-box" id="modal-warning-signals">
+                        Monitorear de cerca signos de paro respiratorio o colapso cardíaco inminente.
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeRecommendations()">Entendido 🩺</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
