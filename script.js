@@ -1,7 +1,81 @@
-/**
- * Asistente AI Premium - Motor de Inferencia & UX Clinica Avanzada
- * Diagnóstico de patologías específicas, Triage Avanzado e Historial Persistente
- */
+// Premium Web Audio Synthesizer for Interactive HCI Feedback
+const AudioFX = {
+    ctx: null,
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+    playSelect() {
+        try {
+            this.init();
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.07);
+            
+            gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.07);
+            
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.07);
+        } catch (e) {
+            console.log("AudioContext blocked or not supported", e);
+        }
+    },
+    playError() {
+        try {
+            this.init();
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+            osc.frequency.setValueAtTime(140, this.ctx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+            
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.3);
+        } catch (e) {
+            console.log(e);
+        }
+    },
+    playSuccess() {
+        try {
+            this.init();
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C Major Pentatonic Chord
+            notes.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + (idx * 0.05));
+                
+                gain.gain.setValueAtTime(0, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.02, this.ctx.currentTime + (idx * 0.05) + 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.7);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.7);
+            });
+        } catch (e) {
+            console.log(e);
+        }
+    }
+};
 
 // Variable global para almacenar el triage activo actual
 let currentTriageColor = "var(--primary-color)";
@@ -31,6 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Limpiar estilos de error si estaban activos
             group.classList.remove('invalid-shake');
             group.style.outline = 'none';
+
+            // Sonido de clic interactivo
+            AudioFX.playSelect();
         };
 
         // Click físico
@@ -86,6 +163,7 @@ function nextStep(current, next) {
             
             // Feedback háptico en móviles (si el navegador lo soporta)
             if (navigator.vibrate) navigator.vibrate(100);
+            AudioFX.playError();
             
             setTimeout(() => {
                 wrapper.classList.remove('invalid-shake');
@@ -106,6 +184,7 @@ function nextStep(current, next) {
                 group.style.outline = '2px solid var(--triage-red)';
                 
                 if (navigator.vibrate) navigator.vibrate(100);
+                AudioFX.playError();
                 
                 setTimeout(() => {
                     group.classList.remove('invalid-shake');
@@ -123,6 +202,7 @@ function nextStep(current, next) {
     }
 
     // Transición de pasos
+    AudioFX.playSelect();
     document.getElementById(`step-${current}`).classList.remove('active');
     document.getElementById(`step-${next}`).classList.add('active');
 
@@ -154,6 +234,39 @@ function evaluateTriage() {
         return;
     }
 
+    // --- FUTURISTIC QUANTUM LOADER SEQUENCE (HCI Interaction) ---
+    const loader = document.getElementById('ai-loader');
+    const loaderProgress = document.getElementById('loader-progress');
+    
+    if (loader && loaderProgress) {
+        loader.classList.remove('hidden');
+        loaderProgress.style.width = '0%';
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            loaderProgress.style.width = `${progress}%`;
+            
+            // Tic-tac sound
+            AudioFX.playSelect();
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                    finalizeTriageEvaluation(patientName, facts);
+                }, 250);
+            }
+        }, 100);
+    } else {
+        finalizeTriageEvaluation(patientName, facts);
+    }
+}
+
+/**
+ * Procesa la evaluación final, emite el diagnóstico clínico e inicia persistencia de datos
+ */
+function finalizeTriageEvaluation(patientName, facts) {
     // 2. Variables de Conclusión
     let resultLevel = "";
     let resultColor = "";
@@ -265,7 +378,7 @@ function evaluateTriage() {
     }
 
     // 5. Guardar en Historial Clínico Local
-    saveTriageCase(patientName, resultLevel, resultColor, diagnosis, ruleApplied);
+    saveTriageCase(patientName, resultLevel, resultColor, diagnosis, ruleApplied, facts);
 }
 
 /**
@@ -315,6 +428,7 @@ function startNewEvaluationFromHistory() {
  * Controla el Tab Switcher (HCI Navigation Improvement)
  */
 function switchTab(tab) {
+    AudioFX.playSelect();
     const btnEval = document.getElementById('tab-eval');
     const btnHist = document.getElementById('tab-hist');
     const wizardView = document.getElementById('wizard-container');
@@ -506,7 +620,7 @@ function toggleRulesUsed() {
 /**
  * Guarda un caso de Triage en LocalStorage y actualiza el badge e historial
  */
-function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed) {
+function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts) {
     let history = [];
     try {
         history = JSON.parse(localStorage.getItem('triageHistory')) || [];
@@ -521,7 +635,8 @@ function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed) {
         colorVar: colorVar,
         diagnosis: diagnosis,
         ruleUsed: ruleUsed,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        facts: facts
     };
 
     history.unshift(newCase); // Añadir al inicio del arreglo
@@ -595,10 +710,29 @@ function renderHistory() {
         // Truncar diagnóstico largo
         const shortDiag = item.diagnosis.length > 105 ? item.diagnosis.substring(0, 105) + "..." : item.diagnosis;
 
+        // Generar dynamic symptom pills
+        let symptomPills = [];
+        if (item.facts) {
+            if (item.facts.conciencia === 'confuso') symptomPills.push('🧠 Confuso');
+            if (item.facts.conciencia === 'inconsciente') symptomPills.push('🧠 Inconsciente');
+            if (item.facts.equilibrio === 'perdida') symptomPills.push('👁️ ACV Alert');
+            if (item.facts.respiracion === 'si') symptomPills.push('🚨 Resp. Severa');
+            if (item.facts.temperatura === 'fiebre') symptomPills.push('🔥 Fiebre');
+            if (item.facts.presion === 'alta') symptomPills.push('📈 P. Alta');
+            if (item.facts.presion === 'baja') symptomPills.push('📉 P. Baja');
+            if (item.facts.dolor_pecho === 'si') symptomPills.push('💔 Dolor Pecho');
+            if (item.facts.tos === 'seca') symptomPills.push('😷 Tos Seca');
+            if (item.facts.tos === 'flema') symptomPills.push('🤢 Tos Flema');
+            if (item.facts.digestivo === 'nauseas') symptomPills.push('🤢 Digestivo');
+        }
+        
+        const pillsHtml = symptomPills.map(p => `<span class="h-symptom-pill">${p}</span>`).join(' ');
+
         card.innerHTML = `
             <div class="history-card-left">
                 <span class="h-name">${item.name}</span>
                 <span class="h-diag">${shortDiag}</span>
+                <div class="h-symptom-container">${pillsHtml}</div>
                 <span class="h-time">🕒 Evaluado a las: ${item.time}</span>
             </div>
             <div class="history-card-right">
