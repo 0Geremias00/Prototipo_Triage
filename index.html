@@ -75,9 +75,9 @@
             </div>
             
             <form id="triage-form" onsubmit="event.preventDefault();">
-                <!-- Paso 1: Datos y Neurología/Respiratorio -->
+                <!-- Paso 1: Datos y Neurología/Identificación -->
                 <div class="step active" id="step-1">
-                    <h2>🧠 Evaluación Neurológica & Respiratoria</h2>
+                    <h2>🧠 Identificación & Evaluación Neurológica</h2>
 
                     <!-- Patient Identification -->
                     <div class="form-group first-group">
@@ -139,106 +139,58 @@
                         <input type="hidden" id="equilibrio" required>
                     </div>
 
-                    <!-- Dificultad Respiratoria -->
-                    <div class="form-group">
-                        <label>Dificultad Respiratoria</label>
-                        <div class="option-cards-group row-layout" data-input-id="respiracion">
-                            <div class="option-card" data-value="no">
-                                <span class="card-icon">🫁</span>
-                                <div class="card-text">
-                                    <span class="card-title">Respiración Normal</span>
-                                    <span class="card-desc">Sin disnea ni esfuerzo respiratorio</span>
-                                </div>
-                            </div>
-                            <div class="option-card hazard-card" data-value="si">
-                                <span class="card-icon">🚨</span>
-                                <div class="card-text">
-                                    <span class="card-title">Dificultad Severa</span>
-                                    <span class="card-desc">Asfixia, disnea o cianosis evidente</span>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="respiracion" required>
-                    </div>
-
                     <button type="button" class="btn btn-primary" onclick="nextStep(1, 2)">Continuar Evaluación <span>&rarr;</span></button>
                 </div>
 
-                <!-- Paso 2: Cardio y Vitales -->
+                <!-- Paso 2: Constantes Vitales Hemodinámicas -->
                 <div class="step" id="step-2">
-                    <h2>🫀 Constantes Vitales y Dolor</h2>
+                    <h2>🫀 Constantes Vitales Hemodinámicas</h2>
                     
-                    <!-- Temperatura Corporal -->
-                    <div class="form-group">
-                        <label>Temperatura Corporal</label>
-                        <div class="option-cards-group row-layout" data-input-id="temperatura">
-                            <div class="option-card" data-value="normal">
-                                <span class="card-icon">🌡️</span>
-                                <div class="card-text">
-                                    <span class="card-title">Normal</span>
-                                    <span class="card-desc">Temperatura &le; 37.9 °C</span>
-                                </div>
-                            </div>
-                            <div class="option-card hazard-card" data-value="fiebre">
-                                <span class="card-icon">🔥</span>
-                                <div class="card-text">
-                                    <span class="card-title">Fiebre</span>
-                                    <span class="card-desc">Temperatura &ge; 38.0 °C</span>
-                                </div>
+                    <div class="vitals-grid">
+                        <!-- Presión Arterial Sistólica -->
+                        <div class="vital-input-group">
+                            <label for="presion_sistolica">Presión Sistólica</label>
+                            <div class="vital-input-wrapper">
+                                <input type="number" id="presion_sistolica" class="vital-input" placeholder="E.g., 120" min="40" max="250" required>
+                                <span class="vital-unit">mmHg</span>
                             </div>
                         </div>
-                        <input type="hidden" id="temperatura" required>
+
+                        <!-- Temperatura Corporal -->
+                        <div class="vital-input-group">
+                            <label for="temperatura">Temperatura</label>
+                            <div class="vital-input-wrapper">
+                                <input type="number" step="0.1" id="temperatura" class="vital-input" placeholder="E.g., 36.5" min="25" max="45" required>
+                                <span class="vital-unit">°C</span>
+                            </div>
+                        </div>
+
+                        <!-- Saturación de Oxígeno -->
+                        <div class="vital-input-group">
+                            <label for="saturacion_o2">Saturación O2 (SpO2)</label>
+                            <div class="vital-input-wrapper">
+                                <input type="number" id="saturacion_o2" class="vital-input" placeholder="E.g., 98" min="50" max="100" required>
+                                <span class="vital-unit">%</span>
+                            </div>
+                        </div>
+
+                        <!-- Frecuencia Cardíaca -->
+                        <div class="vital-input-group">
+                            <label for="frecuencia_cardiaca">Frecuencia Cardíaca</label>
+                            <div class="vital-input-wrapper">
+                                <input type="number" id="frecuencia_cardiaca" class="vital-input" placeholder="E.g., 75" min="30" max="220" required>
+                                <span class="vital-unit">lpm</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Presión Arterial -->
-                    <div class="form-group">
-                        <label>Presión Arterial</label>
-                        <div class="option-cards-group" data-input-id="presion">
-                            <div class="option-card" data-value="normal">
-                                <span class="card-icon">🩺</span>
-                                <div class="card-text">
-                                    <span class="card-title">Normal / Estable</span>
-                                    <span class="card-desc">Valores fisiológicos estándar</span>
-                                </div>
-                            </div>
-                            <div class="option-card warning-card" data-value="alta">
-                                <span class="card-icon">📈</span>
-                                <div class="card-text">
-                                    <span class="card-title">Presión Alta</span>
-                                    <span class="card-desc">Crisis hipertensiva sospechosa</span>
-                                </div>
-                            </div>
-                            <div class="option-card hazard-card" data-value="baja">
-                                <span class="card-icon">📉</span>
-                                <div class="card-text">
-                                    <span class="card-title">Presión Baja</span>
-                                    <span class="card-desc">Signo de shock o colapso hemodinámico</span>
-                                </div>
-                            </div>
+                    <!-- Escala del Dolor -->
+                    <div class="form-group mt-4">
+                        <label for="escala_dolor">Escala del Dolor (1 al 10)</label>
+                        <div class="vital-input-wrapper">
+                            <input type="number" id="escala_dolor" class="vital-input" placeholder="1 = Leve, 10 = Dolor insoportable..." min="1" max="10" required>
+                            <span class="vital-unit">/ 10</span>
                         </div>
-                        <input type="hidden" id="presion" required>
-                    </div>
-
-                    <!-- Dolor en Pecho o Brazo Izquierdo -->
-                    <div class="form-group">
-                        <label>Dolor en Pecho / Brazo Izquierdo</label>
-                        <div class="option-cards-group row-layout" data-input-id="dolor_pecho">
-                            <div class="option-card" data-value="no">
-                                <span class="card-icon">🛡️</span>
-                                <div class="card-text">
-                                    <span class="card-title">Ausente / Otro</span>
-                                    <span class="card-desc">Ninguno o dolor localizado leve</span>
-                                </div>
-                            </div>
-                            <div class="option-card hazard-card" data-value="si">
-                                <span class="card-icon">💔</span>
-                                <div class="card-text">
-                                    <span class="card-title">Dolor Opresivo</span>
-                                    <span class="card-desc">Dolor en pecho irradiado a cuello/brazo</span>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="dolor_pecho" required>
                     </div>
 
                     <div class="button-group">
@@ -247,13 +199,57 @@
                     </div>
                 </div>
 
-                <!-- Paso 3: Síntomas Específicos -->
+                <!-- Paso 3: Síntomas Específicos Complementarios -->
                 <div class="step" id="step-3">
-                    <h2>🦠 Síntomas Específicos</h2>
+                    <h2>🦠 Síntomas Específicos Complementarios</h2>
                     
-                    <!-- Tos y Vías Respiratorias -->
+                    <!-- Dificultad Respiratoria -->
                     <div class="form-group">
-                        <label>Tos y Vías Respiratorias</label>
+                        <label>Dificultad Respiratoria</label>
+                        <div class="option-cards-group row-layout" data-input-id="dificultad_respiratoria">
+                            <div class="option-card" data-value="false">
+                                <span class="card-icon">🫁</span>
+                                <div class="card-text">
+                                    <span class="card-title">Respiración Normal</span>
+                                    <span class="card-desc">Sin disnea ni esfuerzo evidente</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="true">
+                                <span class="card-icon">🚨</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dificultad Severa</span>
+                                    <span class="card-desc">Asfixia, disnea o cianosis</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="dificultad_respiratoria" required>
+                    </div>
+
+                    <!-- Dolor de Pecho -->
+                    <div class="form-group">
+                        <label>¿Presenta Dolor de Pecho?</label>
+                        <div class="option-cards-group row-layout" data-input-id="dolor_pecho">
+                            <div class="option-card" data-value="no">
+                                <span class="card-icon">🛡️</span>
+                                <div class="card-text">
+                                    <span class="card-title">Ausente / Otro</span>
+                                    <span class="card-desc">Sin molestias coronarias</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="si">
+                                <span class="card-icon">💔</span>
+                                <div class="card-text">
+                                    <span class="card-title">Dolor Opresivo</span>
+                                    <span class="card-desc">Dolor irradiado a cuello o brazo</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="dolor_pecho" required>
+                    </div>
+
+                    <!-- Tos -->
+                    <div class="form-group">
+                        <label>Tos y Vías Aéreas</label>
                         <div class="option-cards-group" data-input-id="tos">
                             <div class="option-card" data-value="ninguna">
                                 <span class="card-icon">💨</span>
@@ -266,40 +262,47 @@
                                 <span class="card-icon">😷</span>
                                 <div class="card-text">
                                     <span class="card-title">Tos Seca</span>
-                                    <span class="card-desc">Irritativa, persistente y sin expectoración</span>
+                                    <span class="card-desc">Irritativa, persistente y sin flema</span>
                                 </div>
                             </div>
                             <div class="option-card warning-card" data-value="flema">
                                 <span class="card-icon">🤢</span>
                                 <div class="card-text">
-                                    <span class="card-title">Tos Productiva</span>
-                                    <span class="card-desc">Persistente con expectoración de flema</span>
+                                    <span class="card-title">Tos Con Flema</span>
+                                    <span class="card-desc">Productiva con expectoración activa</span>
                                 </div>
                             </div>
                         </div>
                         <input type="hidden" id="tos" required>
                     </div>
 
-                    <!-- Problemas Digestivos -->
+                    <!-- Síntomas Digestivos -->
                     <div class="form-group">
-                        <label>Problemas Digestivos</label>
-                        <div class="option-cards-group row-layout" data-input-id="digestivo">
+                        <label>Síntomas Digestivos</label>
+                        <div class="option-cards-group" data-input-id="sintomas_digestivos">
                             <div class="option-card" data-value="ninguno">
                                 <span class="card-icon">🥗</span>
                                 <div class="card-text">
                                     <span class="card-title">Ninguno</span>
-                                    <span class="card-desc">Sistema digestivo normal</span>
+                                    <span class="card-desc">Sistema digestivo en estado normal</span>
                                 </div>
                             </div>
                             <div class="option-card warning-card" data-value="nauseas">
                                 <span class="card-icon">🤢</span>
                                 <div class="card-text">
-                                    <span class="card-title">Náuseas, Vómitos / Diarrea</span>
-                                    <span class="card-desc">Gastrointestinal agudo activo</span>
+                                    <span class="card-title">Náuseas / Vómitos</span>
+                                    <span class="card-desc">Malestar estomacal activo</span>
+                                </div>
+                            </div>
+                            <div class="option-card hazard-card" data-value="vomitos">
+                                <span class="card-icon">🤮</span>
+                                <div class="card-text">
+                                    <span class="card-title">Vómitos Persistentes</span>
+                                    <span class="card-desc">Incapacidad de retener líquidos</span>
                                 </div>
                             </div>
                         </div>
-                        <input type="hidden" id="digestivo" required>
+                        <input type="hidden" id="sintomas_digestivos" required>
                     </div>
 
                     <div class="button-group">

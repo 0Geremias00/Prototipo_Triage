@@ -1,3 +1,9 @@
+/**
+ * Asistente AI Premium - Motor de Inferencia & UX Clinica Avanzada
+ * Diagnóstico de patologías específicas, Triage Avanzado e Historial Persistente
+ * Cumple con el Protocolo Manchester y las Heurísticas HCI.
+ */
+
 // Premium Web Audio Synthesizer for Interactive HCI Feedback
 const AudioFX = {
     ctx: null,
@@ -77,15 +83,133 @@ const AudioFX = {
     }
 };
 
-// Variable global para almacenar el triage activo actual
+/**
+ * MOTOR DE INFERENCIA DE ENCADENAMIENTO HACIA ADELANTE (FORWARD CHAINING)
+ * Implementa la Base de Conocimiento del Triage Manchester con priorización de vida.
+ */
+class TriageInferenceEngine {
+    constructor(facts) {
+        this.facts = facts;
+    }
+
+    evaluate() {
+        const {
+            conciencia,
+            equilibrio,
+            presion_sistolica,
+            temperatura,
+            saturacion_o2,
+            frecuencia_cardiaca,
+            escala_dolor,
+            dificultad_respiratoria,
+            dolor_pecho,
+            tos,
+            sintomas_digestivos
+        } = this.facts;
+
+        // HEURÍSTICA DE RESOLUCIÓN DE CONFLICTOS: PRIORIZACIÓN CRÍTICA (SHORT-CIRCUIT)
+        
+        // REGLA 1: Código ICTUS (ACV) -> Rojo (Inmediato)
+        if (equilibrio === "perdida" && (conciencia === "confuso" || conciencia === "inconsciente")) {
+            return {
+                level: "PRIORIDAD I - ROJO",
+                color: "var(--triage-red)",
+                glowColor: "var(--triage-red-glow)",
+                code: "acv",
+                diagnosis: "⚠️ CÓDIGO ICTUS ACTIVADO: Accidente Cerebrovascular (ACV) Agudo. Daño neurológico focal en curso. Tomografía y trombolisis inmediatas.",
+                ruleApplied: 'IF (equilibrio == "perdida" AND conciencia IN ["confuso", "inconsciente"])\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "ACV AGUDO"'
+            };
+        }
+
+        // REGLA 2: Código INFARTO (IAM) -> Rojo (Inmediato)
+        if (dolor_pecho === "si" && (dificultad_respiratoria === true || presion_sistolica < 90 || conciencia === "inconsciente")) {
+            return {
+                level: "PRIORIDAD I - ROJO",
+                color: "var(--triage-red)",
+                glowColor: "var(--triage-red-glow)",
+                code: "iam",
+                diagnosis: "⚠️ CÓDIGO INFARTO ACTIVADO: Infarto Agudo de Miocardio (IAM). Dolor opresivo coronario. Electrocardiograma (ECG) en menos de 10 min.",
+                ruleApplied: 'IF (dolor_pecho == "si" AND (dificultad_respiratoria == true OR presion_sistolica < 90 OR conciencia == "inconsciente"))\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "IAM / CRISIS CORONARIA"'
+            };
+        }
+
+        // REGLA 3: Código NARANJA (IRAG / Neumonía) -> Naranja (Muy Urgente, < 15 min)
+        if (
+            (temperatura > 39.0 && presion_sistolica < 90) ||
+            (frecuencia_cardiaca > 120 && temperatura > 38.0) ||
+            (temperatura > 38.0 && tos !== "ninguna" && dificultad_respiratoria === true)
+        ) {
+            return {
+                level: "PRIORIDAD II - NARANJA",
+                color: "var(--triage-orange)",
+                glowColor: "var(--triage-orange-glow)",
+                code: "irag",
+                diagnosis: "🫁 Código NARANJA: Infección Respiratoria Aguda Grave (IRAG) / Neumonía Grave. Riesgo elevado de insuficiencia ventilatoria severa.",
+                ruleApplied: 'IF (temperatura > 39.0 AND presion_sistolica < 90)\n   OR (frecuencia_cardiaca > 120 AND temperatura > 38.0)\n   OR (temperatura > 38.0 AND tos != "ninguna" AND dificultad_respiratoria == true)\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "IRAG / NEUMONÍA GRAVE"'
+            };
+        }
+
+        // REGLA 4: Código AMARILLO (Dolor Agudo / Crisis / Gastro) -> Amarillo (Urgente, < 30 min)
+        if (
+            (escala_dolor > 7 && presion_sistolica > 160) ||
+            (sintomas_digestivos === "nauseas" && temperatura > 38.0) ||
+            (sintomas_digestivos === "vomitos" && temperatura > 38.0)
+        ) {
+            return {
+                level: "PRIORIDAD III - AMARILLO",
+                color: "var(--triage-yellow)",
+                glowColor: "var(--triage-yellow-glow)",
+                code: "gastro",
+                diagnosis: "⚠️ Código AMARILLO: Gastroenteritis Aguda / Crisis Hipertensiva. Requiere canalización, hidratación IV y monitoreo hemodinámico rápido.",
+                ruleApplied: 'IF (escala_dolor > 7 AND presion_sistolica > 160)\n   OR (sintomas_digestivos IN ["nauseas", "vomitos"] AND temperatura > 38.0)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "GASTROENTERITIS / DOLOR AGUDO"'
+            };
+        }
+
+        // REGLA 5: Código VERDE (Estable) -> Verde (Menos Urgente, < 120 min)
+        if (
+            temperatura < 37.5 &&
+            escala_dolor < 3 &&
+            saturacion_o2 > 95 &&
+            conciencia === "alerta" &&
+            equilibrio === "normal" &&
+            dificultad_respiratoria === false &&
+            dolor_pecho === "no" &&
+            tos === "ninguna" &&
+            sintomas_digestivos === "ninguno" &&
+            presion_sistolica >= 90 && presion_sistolica <= 140 &&
+            frecuencia_cardiaca >= 60 && frecuencia_cardiaca <= 100
+        ) {
+            return {
+                level: "PRIORIDAD IV - VERDE",
+                color: "var(--triage-green)",
+                glowColor: "var(--triage-green-glow)",
+                code: "estable",
+                diagnosis: "✅ Código VERDE: Paciente Clínicamente Estable. Signos vitales en rangos basales. Puede ser atendido en consulta externa programada.",
+                ruleApplied: 'IF (temperatura < 37.5 AND escala_dolor < 3 AND saturacion_o2 > 95 AND todas_las_demas_variables_estables_o_negativas)\nTHEN triage = "VERDE (PRIORIDAD IV)" AND diagnostico = "PACIENTE CLÍNICAMENTE ESTABLE"'
+            };
+        }
+
+        // REGLA 6: REGLA POR DEFECTO (Inespecífico) -> Amarillo (Urgente, < 60 min)
+        return {
+            level: "PRIORIDAD III - AMARILLO",
+            color: "var(--triage-yellow)",
+            glowColor: "var(--triage-yellow-glow)",
+            code: "default",
+            diagnosis: "⚠️ Código AMARILLO (Inespecífico): Evaluación Clínica Completa Requerida. Síntomas sistémicos inespecíficos descompensados. Controlar signos vitales cada 30 min.",
+            ruleApplied: 'IF (ninguna_otra_regla_activada)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "EVALUAR SÍNTOMAS INESPECÍFICOS"'
+        };
+    }
+}
+
+// Variables globales para almacenar el triage activo actual
 let currentTriageColor = "var(--primary-color)";
 let currentTriageText = "PRIORIDAD V - VERDE";
+let currentTriageCode = "default";
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Vincular los event handlers de las Option Cards
     const optionCards = document.querySelectorAll('.option-card');
     optionCards.forEach(card => {
-        // Hacer focusable por teclado para accesibilidad
         card.setAttribute('tabindex', '0');
         
         const selectCard = () => {
@@ -93,16 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const inputId = group.getAttribute('data-input-id');
             const hiddenInput = document.getElementById(inputId);
             
-            // Remover selección de hermanos
             group.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-            
-            // Añadir selección a esta tarjeta
             card.classList.add('selected');
-            
-            // Asignar valor al input oculto
             hiddenInput.value = card.getAttribute('data-value');
             
-            // Limpiar estilos de error si estaban activos
             group.classList.remove('invalid-shake');
             group.style.outline = 'none';
 
@@ -110,10 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             AudioFX.playSelect();
         };
 
-        // Click físico
         card.addEventListener('click', selectCard);
-        
-        // Teclado (Accesibilidad WCAG)
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -136,10 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Controla el flujo paso a paso del Wizard con validación avanzada y feedback háptico/visual
+ * Controla el flujo paso a paso del Wizard con validación avanzada y feedback auditivo/visual
  */
 function nextStep(current, next) {
-    // Si retrocedemos, no hay validación
     if (next < current) {
         document.getElementById(`step-${current}`).classList.remove('active');
         document.getElementById(`step-${next}`).classList.add('active');
@@ -152,7 +266,7 @@ function nextStep(current, next) {
     const currentStepDiv = document.getElementById(`step-${current}`);
     let allValid = true;
 
-    // A. Validar inputs de texto (Nombre del Paciente, solo en el paso 1)
+    // A. Validar inputs de texto
     const textInputs = currentStepDiv.querySelectorAll('input[type="text"]');
     textInputs.forEach(input => {
         const wrapper = input.closest('.input-wrapper') || input;
@@ -161,7 +275,6 @@ function nextStep(current, next) {
             wrapper.classList.add('invalid-shake');
             input.focus();
             
-            // Feedback háptico en móviles (si el navegador lo soporta)
             if (navigator.vibrate) navigator.vibrate(100);
             AudioFX.playError();
             
@@ -173,7 +286,31 @@ function nextStep(current, next) {
         }
     });
 
-    // B. Validar inputs ocultos que corresponden a las Option Cards
+    // B. Validar inputs numéricos de Constantes Vitales
+    const numericInputs = currentStepDiv.querySelectorAll('input[type="number"]');
+    numericInputs.forEach(input => {
+        const wrapper = input.closest('.vital-input-wrapper') || input;
+        const val = parseFloat(input.value);
+        const min = parseFloat(input.getAttribute('min'));
+        const max = parseFloat(input.getAttribute('max'));
+        
+        if (isNaN(val) || val < min || val > max) {
+            allValid = false;
+            wrapper.classList.add('invalid-shake');
+            input.focus();
+            
+            if (navigator.vibrate) navigator.vibrate(100);
+            AudioFX.playError();
+            
+            setTimeout(() => {
+                wrapper.classList.remove('invalid-shake');
+            }, 400);
+        } else {
+            wrapper.classList.remove('invalid-shake');
+        }
+    });
+
+    // C. Validar inputs ocultos de Option Cards
     const hiddenInputs = currentStepDiv.querySelectorAll('input[type="hidden"]');
     hiddenInputs.forEach(input => {
         const group = currentStepDiv.querySelector(`.option-cards-group[data-input-id="${input.id}"]`);
@@ -198,7 +335,7 @@ function nextStep(current, next) {
     });
 
     if (!allValid) {
-        return; // Interrumpe el avance si hay errores
+        return;
     }
 
     // Transición de pasos
@@ -212,29 +349,32 @@ function nextStep(current, next) {
 }
 
 /**
- * Corre el Motor de Inferencia Avanzado y genera el diagnóstico y prioridad de Triage
+ * Inicia la animación del cargador de IA y evalúa el triage con encadenamiento hacia adelante
  */
 function evaluateTriage() {
-    // 1. Recolección de hechos desde las Option Cards (inputs ocultos)
     const patientName = document.getElementById('paciente-nombre').value.trim() || "Paciente Anónimo";
     const facts = {
         conciencia: document.getElementById('conciencia').value,
         equilibrio: document.getElementById('equilibrio').value,
-        respiracion: document.getElementById('respiracion').value,
-        temperatura: document.getElementById('temperatura').value,
-        presion: document.getElementById('presion').value,
+        presion_sistolica: parseInt(document.getElementById('presion_sistolica').value),
+        temperatura: parseFloat(document.getElementById('temperatura').value),
+        saturacion_o2: parseInt(document.getElementById('saturacion_o2').value),
+        frecuencia_cardiaca: parseInt(document.getElementById('frecuencia_cardiaca').value),
+        escala_dolor: parseInt(document.getElementById('escala_dolor').value),
+        dificultad_respiratoria: document.getElementById('dificultad_respiratoria').value === 'true',
         dolor_pecho: document.getElementById('dolor_pecho').value,
         tos: document.getElementById('tos').value,
-        digestivo: document.getElementById('digestivo').value
+        sintomas_digestivos: document.getElementById('sintomas_digestivos').value
     };
 
-    // Validar el paso 3 antes de evaluar
-    if (!facts.tos || !facts.digestivo) {
-        nextStep(3, 3); // Activa el feedback visual de campos faltantes en el paso 3
+    // Validar paso 3
+    const dificultadRaw = document.getElementById('dificultad_respiratoria').value;
+    if (!dificultadRaw || !facts.dolor_pecho || !facts.tos || !facts.sintomas_digestivos) {
+        nextStep(3, 3);
         return;
     }
 
-    // --- FUTURISTIC QUANTUM LOADER SEQUENCE (HCI Interaction) ---
+    // --- FUTURISTIC LOADER SEQUENCE ---
     const loader = document.getElementById('ai-loader');
     const loaderProgress = document.getElementById('loader-progress');
     
@@ -264,132 +404,74 @@ function evaluateTriage() {
 }
 
 /**
- * Procesa la evaluación final, emite el diagnóstico clínico e inicia persistencia de datos
+ * Concluye la evaluación de triage clínica
  */
 function finalizeTriageEvaluation(patientName, facts) {
-    // 2. Variables de Conclusión
-    let resultLevel = "";
-    let resultColor = "";
-    let glowColor = "";
-    let diagnosis = "";
-    let ruleApplied = "";
+    // Invocar el motor de inferencia (Forward Chaining)
+    const engine = new TriageInferenceEngine(facts);
+    const conclusion = engine.evaluate();
 
-    // --- REGLAS DEL SISTEMA EXPERTO (Encadenamiento hacia adelante con priorización crítica) ---
+    currentTriageColor = conclusion.color;
+    currentTriageText = conclusion.level;
+    currentTriageCode = conclusion.code;
 
-    // REGLA 1: Accidente Cerebrovascular (ACV) - Código ICTUS (Rojo)
-    if (facts.equilibrio === "perdida" && (facts.conciencia === "confuso" || facts.conciencia === "inconsciente")) {
-        resultLevel = "PRIORIDAD I - ROJO";
-        resultColor = "var(--triage-red)";
-        glowColor = "var(--triage-red-glow)";
-        diagnosis = "⚠️ ALERTA CÓDIGO ICTUS: Posible Accidente Cerebrovascular (ACV). Daño neurológico agudo en curso. Requiere tomografía y trombolisis inmediata.";
-        ruleApplied = 'IF (equilibrio == "perdida" AND conciencia IN ["confuso", "inconsciente"])\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "ACV AGUDO"';
-    }
-    // REGLA 2: Infarto Agudo de Miocardio - Código Infarto (Rojo)
-    else if (facts.dolor_pecho === "si" && (facts.respiracion === "si" || facts.presion === "baja" || facts.conciencia === "inconsciente")) {
-        resultLevel = "PRIORIDAD I - ROJO";
-        resultColor = "var(--triage-red)";
-        glowColor = "var(--triage-red-glow)";
-        diagnosis = "⚠️ ALERTA CÓDIGO INFARTO: Posible Infarto Agudo de Miocardio (IAM). Compromiso cardíaco mayor. Tomar ECG en menos de 10 minutos.";
-        ruleApplied = 'IF (dolor_pecho == "si" AND (respiracion == "si" OR presion == "baja" OR conciencia == "inconsciente"))\nTHEN triage = "ROJO (PRIORIDAD I)" AND diagnostico = "IAM / CRISIS CORONARIA"';
-    }
-    // REGLA 3: Infección Respiratoria Aguda Grave (IRAG / Neumonía) (Naranja)
-    else if (facts.temperatura === "fiebre" && facts.tos !== "ninguna" && facts.respiracion === "si") {
-        resultLevel = "PRIORIDAD II - NARANJA";
-        resultColor = "var(--triage-orange)";
-        glowColor = "var(--triage-orange-glow)";
-        diagnosis = "🫁 Neumonía Grave / IRAG (Infección Respiratoria Aguda Grave). Riesgo inminente de insuficiencia respiratoria severa (hipoxia).";
-        ruleApplied = 'IF (temperatura == "fiebre" AND tos != "ninguna" AND respiracion == "si")\nTHEN triage = "NARANJA (PRIORIDAD II)" AND diagnostico = "IRAG/NEUMONÍA GRAVE"';
-    }
-    // REGLA 4: Gastroenteritis Aguda / Deshidratación Sistémica (Amarillo)
-    else if (facts.digestivo === "nauseas" && facts.temperatura === "fiebre") {
-        resultLevel = "PRIORIDAD III - AMARILLO";
-        resultColor = "var(--triage-yellow)";
-        glowColor = "var(--triage-yellow-glow)";
-        diagnosis = "🦠 Infección Gastrointestinal Aguda (Gastroenteritis) con fiebre. Riesgo moderado de deshidratación e intolerancia a la vía oral.";
-        ruleApplied = 'IF (digestivo == "nauseas" AND temperatura == "fiebre")\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "GASTROENTERITIS ACUTA"';
-    }
-    // REGLA 5: Paciente Fisiológicamente Estable (Verde)
-    else if (facts.conciencia === "alerta" && facts.equilibrio === "normal" && facts.respiracion === "no" && 
-             facts.temperatura === "normal" && facts.presion === "normal" && facts.dolor_pecho === "no" && 
-             facts.tos === "ninguna" && facts.digestivo === "ninguno") {
-        resultLevel = "PRIORIDAD V - VERDE";
-        resultColor = "var(--triage-green)";
-        glowColor = "var(--triage-green-glow)";
-        diagnosis = "✅ Paciente Clínicamente Estable. No se detectan anomalías en las funciones vitales. Puede ser atendido en consulta general.";
-        ruleApplied = 'IF (todas_las_variables == "normal / estable / negativo")\nTHEN triage = "VERDE (PRIORIDAD V)" AND diagnostico = "ESTABLE"';
-    }
-    // REGLA POR DEFECTO: Evaluación Clínica en Urgencias (Amarillo)
-    else {
-        resultLevel = "PRIORIDAD III - AMARILLO";
-        resultColor = "var(--triage-yellow)";
-        glowColor = "var(--triage-yellow-glow)";
-        diagnosis = "⚠️ Síntomas sistémicos inespecíficos. Requiere evaluación médica rápida en box para descartar patología evolutiva.";
-        ruleApplied = 'IF (sintomas_multiples_leves OR descompensacion_menor)\nTHEN triage = "AMARILLO (PRIORIDAD III)" AND diagnostico = "EVALUAR SÍNTOMAS INESPECÍFICOS"';
-    }
-
-    // Salvar estado activo de triage para el modal
-    currentTriageColor = resultColor;
-    currentTriageText = resultLevel;
-
-    // 3. UI Update - Cambiar de pantallas
+    // UI Update - Cambiar de pantallas
     document.getElementById('wizard-container').classList.add('hidden');
     document.getElementById('result-container').classList.remove('hidden');
 
-    // Actualizar nombre en la UI
+    // Actualizar datos de resultado en pantalla
     document.getElementById('result-patient-name').innerHTML = `Paciente: <span>${patientName}</span>`;
 
-    // Actualizar caja de prioridad
     const resultBox = document.getElementById('triage-result');
-    resultBox.textContent = resultLevel;
-    resultBox.style.backgroundColor = resultColor;
-    resultBox.style.boxShadow = `0 0 35px ${glowColor}`;
+    resultBox.textContent = conclusion.level;
+    resultBox.style.backgroundColor = conclusion.color;
+    resultBox.style.boxShadow = `0 0 35px ${conclusion.glowColor}`;
     
     // Contraste para textos oscuros en fondos claros
-    if (resultColor === "var(--triage-yellow)" || resultColor === "var(--triage-green)") {
+    if (conclusion.color === "var(--triage-yellow)" || conclusion.color === "var(--triage-green)") {
         resultBox.style.color = "#070a13";
     } else {
         resultBox.style.color = "#ffffff";
     }
 
-    // Actualizar caja de patología
     const diagnosisBox = document.getElementById('disease-diagnosis');
-    diagnosisBox.innerHTML = diagnosis;
-    diagnosisBox.style.borderLeftColor = resultColor;
-    diagnosisBox.style.color = resultColor;
+    diagnosisBox.innerHTML = conclusion.diagnosis;
+    diagnosisBox.style.borderLeftColor = conclusion.color;
+    diagnosisBox.style.color = conclusion.color;
 
-    // Mostrar regla aplicada
-    document.getElementById('rule-used').textContent = ruleApplied;
+    document.getElementById('rule-used').textContent = conclusion.ruleApplied;
 
-    // 4. ANIMAR CEREBRO HOLOGRÁFICO SVG DENTRO DE LA UI (Feedback visual único)
+    // Animar SVG
     const glowingBrain = document.getElementById('glowing-brain');
     if (glowingBrain) {
         const paths = glowingBrain.querySelectorAll('path, line');
         const nodes = glowingBrain.querySelectorAll('.node-pulse');
         
         paths.forEach(p => {
-            p.setAttribute('stroke', resultColor);
+            p.setAttribute('stroke', conclusion.color);
             p.style.opacity = "0.9";
             p.style.transition = "stroke 0.8s ease";
         });
         nodes.forEach(n => {
-            n.setAttribute('fill', resultColor);
+            n.setAttribute('fill', conclusion.color);
             n.style.transition = "fill 0.8s ease";
         });
     }
 
-    // 5. Guardar en Historial Clínico Local
-    saveTriageCase(patientName, resultLevel, resultColor, diagnosis, ruleApplied, facts);
+    // Play success sound
+    AudioFX.playSuccess();
+
+    // Guardar en base de datos local
+    saveTriageCase(patientName, conclusion.level, conclusion.color, conclusion.diagnosis, conclusion.ruleApplied, facts);
 }
 
 /**
  * Resetea el formulario y reorienta al paso 1
  */
 function resetForm() {
-    // Reset de inputs
     document.getElementById('triage-form').reset();
     document.getElementById('paciente-nombre').value = "";
     
-    // Limpiar option cards e inputs ocultos
     document.querySelectorAll('input[type="hidden"]').forEach(input => {
         input.value = "";
     });
@@ -397,35 +479,30 @@ function resetForm() {
         card.classList.remove('selected');
     });
 
-    // Reset de vistas
     document.getElementById('result-container').classList.add('hidden');
     document.getElementById('wizard-container').classList.remove('hidden');
     
-    // Activar paso 1
     document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
     document.getElementById('step-1').classList.add('active');
     
-    // Barra de progreso
     document.getElementById('progress').style.width = '33.33%';
 }
 
 /**
- * Inicia una nueva evaluación desde la pestaña de historial de manera fluida (HCI Improvement)
+ * Inicia una nueva evaluación desde la pestaña de historial
  */
 function startNewEvaluationFromHistory() {
     resetForm();
     switchTab('eval');
     
-    // Enfocar automáticamente el campo del nombre para reducir clics (HCI Heuristic)
     setTimeout(() => {
         const nameInput = document.getElementById('paciente-nombre');
         if (nameInput) nameInput.focus();
     }, 150);
 }
 
-
 /**
- * Controla el Tab Switcher (HCI Navigation Improvement)
+ * Controla la navegación del menú dinámico (HCI Tabs)
  */
 function switchTab(tab) {
     AudioFX.playSelect();
@@ -439,7 +516,6 @@ function switchTab(tab) {
         btnEval.classList.add('active');
         btnHist.classList.remove('active');
         
-        // Si hay resultados activos en pantalla, mostrar la pantalla de resultados
         if (!resultView.classList.contains('hidden')) {
             resultView.classList.remove('hidden');
             wizardView.classList.add('hidden');
@@ -456,13 +532,12 @@ function switchTab(tab) {
         resultView.classList.add('hidden');
         historyView.classList.remove('hidden');
         
-        // Refrescar renderizado del historial al abrir la pestaña
         renderHistory();
     }
 }
 
 /**
- * Abre el Modal de Recomendaciones según el color de triage activo
+ * Abre el Modal de Recomendaciones según la Regla activa (Acción Prioritaria)
  */
 function openRecommendations() {
     const modal = document.getElementById('recommendations-modal');
@@ -472,109 +547,155 @@ function openRecommendations() {
     const alarmBox = document.getElementById('modal-warning-signals');
     const priorityIcon = document.getElementById('modal-priority-icon');
 
-    // Limpiar lista
     actionsList.innerHTML = "";
 
-    // Configurar contenido según Triage
-    if (currentTriageColor === "var(--triage-red)") {
+    // Configurar contenido del modal según Código Triage
+    if (currentTriageCode === "acv") {
         priorityIcon.textContent = "🚨";
-        title.textContent = "Protocolo de Emergencia Crítica - Código Rojo";
-        targetTime.textContent = "Inmediato (0 minutos de espera)";
+        title.textContent = "Protocolo de Emergencia - Código ICTUS (ACV)";
+        targetTime.textContent = "Nivel I - ROJO (Inmediato, 0 min de espera)";
         targetTime.style.backgroundColor = "rgba(244, 63, 94, 0.15)";
         targetTime.style.color = "var(--triage-red)";
         targetTime.style.borderColor = "rgba(244, 63, 94, 0.3)";
 
         const actions = [
-            "Trasladar de inmediato al paciente al Box de Reanimación (Shock-Trauma).",
-            "Notificar con urgencia al médico intensivista o de emergencias de guardia.",
-            "Canalizar dos accesos venosos periféricos de grueso calibre (18G o superior).",
-            "Iniciar oxigenoterapia para mantener saturación de oxígeno por encima de 94%.",
-            "Conectar monitorización cardíaca continua, oximetría y presión arterial automática.",
-            "En caso de sospecha de Infarto, tomar electrocardiograma (ECG) en menos de 10 min.",
-            "En caso de sospecha de ACV, activar inmediatamente el protocolo de Código Ictus."
+            "Activar el protocolo de Código ICTUS de forma inmediata.",
+            "Derivar de urgencia absoluta a Tomografía Computarizada (TAC) craneal.",
+            "Preparar protocolo y accesos periféricos para trombolisis farmacológica intravenosa.",
+            "Canalizar doble vía venosa periférica gruesa (18G o superior).",
+            "Mantener monitorización continua de saturación, ECG y presión arterial."
         ];
         actions.forEach(act => {
             const li = document.createElement('li');
             li.textContent = act;
             actionsList.appendChild(li);
         });
-        alarmBox.innerHTML = "<strong>CRÍTICO:</strong> Vigilar estrechamente signos de colapso respiratorio, cianosis progresiva, pérdida del pulso periférico y ritmo cardíaco.";
+        alarmBox.innerHTML = "<strong>CRÍTICO:</strong> Monitorear estrechamente signos de colapso respiratorio, pérdida súbita de reflejos de vía aérea o alteración refleja pupilar.";
         alarmBox.style.backgroundColor = "var(--alarm-red-bg)";
         alarmBox.style.color = "var(--alarm-red-text)";
         alarmBox.style.borderColor = "var(--alarm-red-border)";
 
-    } else if (currentTriageColor === "var(--triage-orange)") {
-        priorityIcon.textContent = "🔥";
-        title.textContent = "Protocolo Muy Urgente - Código Naranja";
-        targetTime.textContent = "Atención máxima en 15 minutos";
+    } else if (currentTriageCode === "iam") {
+        priorityIcon.textContent = "🚨";
+        title.textContent = "Protocolo de Emergencia - Código INFARTO (IAM)";
+        targetTime.textContent = "Nivel I - ROJO (Inmediato, 0 min de espera)";
+        targetTime.style.backgroundColor = "rgba(244, 63, 94, 0.15)";
+        targetTime.style.color = "var(--triage-red)";
+        targetTime.style.borderColor = "rgba(244, 63, 94, 0.3)";
+
+        const actions = [
+            "Movilizar al paciente a la Sala de Reanimación (Shock-Trauma) de inmediato.",
+            "Tomar Electrocardiograma (ECG) de 12 derivaciones en menos de 10 minutos.",
+            "Disponer cateterismo cardíaco de emergencia (Sala de Hemodinamia) / Angioplastia primaria.",
+            "Administrar oxígeno por cánula nasal si SpO2 es inferior al 94%.",
+            "Tener carro de paro y desfibrilador listo a un costado de la camilla."
+        ];
+        actions.forEach(act => {
+            const li = document.createElement('li');
+            li.textContent = act;
+            actionsList.appendChild(li);
+        });
+        alarmBox.innerHTML = "<strong>CRÍTICO:</strong> Vigilar arritmias letales en monitorización (e.g. FV, TV) y reportar de inmediato dolor progresivo opresivo de pecho.";
+        alarmBox.style.backgroundColor = "var(--alarm-red-bg)";
+        alarmBox.style.color = "var(--alarm-red-text)";
+        alarmBox.style.borderColor = "var(--alarm-red-border)";
+
+    } else if (currentTriageCode === "irag") {
+        priorityIcon.textContent = "🫁";
+        title.textContent = "Protocolo Muy Urgente - Código Naranja (IRAG)";
+        targetTime.textContent = "Nivel II - NARANJA (Muy Urgente, < 15 min)";
         targetTime.style.backgroundColor = "rgba(251, 146, 60, 0.15)";
         targetTime.style.color = "var(--triage-orange)";
         targetTime.style.borderColor = "rgba(251, 146, 60, 0.3)";
 
         const actions = [
-            "Ubicación preferente en camilla del área de observación o cuidados intermedios.",
-            "Evaluación por médico clínico en un tiempo no mayor a 15 minutos.",
-            "Instalar acceso venoso y tomar muestras de sangre basales.",
-            "Control y registro minucioso de temperatura corporal y frecuencia respiratoria.",
-            "Reposo absoluto y monitorización intermitente de saturación de oxígeno."
+            "Iniciar medición continua de Oximetría de pulso y frecuencia cardíaca.",
+            "Aislar preventivamente al paciente en cubículo asignado.",
+            "Instalar oxigenoterapia complementaria por mascarilla o puntas nasales.",
+            "Canalizar vía venosa periférica para administración de antibioticoterapia de amplio espectro.",
+            "Disponer la toma urgente de Radiografía de Tórax portátil."
         ];
         actions.forEach(act => {
             const li = document.createElement('li');
             li.textContent = act;
             actionsList.appendChild(li);
         });
-        alarmBox.innerHTML = "<strong>ALERTA:</strong> Reportar de inmediato si se presenta descompensación neurológica súbita, incremento severo de la disnea o hipotensión progresiva.";
+        alarmBox.innerHTML = "<strong>ALERTA:</strong> Reportar descompensación neurológica súbita por hipoxia, saturación < 90% o aumento severo de la disnea.";
         alarmBox.style.backgroundColor = "var(--alarm-orange-bg)";
         alarmBox.style.color = "var(--alarm-orange-text)";
         alarmBox.style.borderColor = "var(--alarm-orange-border)";
 
-    } else if (currentTriageColor === "var(--triage-yellow)") {
+    } else if (currentTriageCode === "gastro") {
         priorityIcon.textContent = "🟡";
-        title.textContent = "Protocolo de Urgencia - Código Amarillo";
-        targetTime.textContent = "Atención dentro de 60 minutos";
+        title.textContent = "Protocolo Urgente - Código Amarillo (Gastro / Dolor)";
+        targetTime.textContent = "Nivel III - AMARILLO (Urgente, < 30 min)";
         targetTime.style.backgroundColor = "rgba(250, 204, 21, 0.1)";
         targetTime.style.color = "var(--triage-yellow)";
         targetTime.style.borderColor = "rgba(250, 204, 21, 0.2)";
 
         const actions = [
-            "Asignar espacio en sala de espera asistida o Box de Urgencias leve.",
-            "Control de signos vitales completos cada 30 minutos.",
-            "Evaluar el nivel de dolor en escala visual análoga (EVA).",
-            "Iniciar medidas generales (e.g., hidratación oral controlada si está indicada)."
+            "Canalizar acceso venoso periférico para inicio de hidratación intravenosa con soluciones cristaloides.",
+            "Establecer reposición de volumen y electrolitos según balance hídrico.",
+            "Establecer monitoreo térmico seriado e iniciar analgésicos o antipiréticos prescritos.",
+            "Evaluar el nivel de dolor en escala visual análoga (EVA) cada 20 minutos."
         ];
         actions.forEach(act => {
             const li = document.createElement('li');
             li.textContent = act;
             actionsList.appendChild(li);
         });
-        alarmBox.innerHTML = "<strong>NOTA:</strong> Educar al paciente en sala de espera para alertar si presenta dolor de pecho, asfixia o pérdida de fuerza motriz.";
+        alarmBox.innerHTML = "<strong>NOTA:</strong> Monitorear signos de shock hipovolémico por deshidratación severa, intolerancia a la vía oral o dolor abdominal de rebote.";
         alarmBox.style.backgroundColor = "var(--alarm-yellow-bg)";
         alarmBox.style.color = "var(--alarm-yellow-text)";
         alarmBox.style.borderColor = "var(--alarm-yellow-border)";
 
-    } else { // Verde
+    } else if (currentTriageCode === "estable") {
         priorityIcon.textContent = "🟢";
         title.textContent = "Protocolo Estable - Código Verde";
-        targetTime.textContent = "Atención hasta 120 minutos (No Urgente)";
+        targetTime.textContent = "Nivel IV - VERDE (Menos Urgente, < 120 min)";
         targetTime.style.backgroundColor = "rgba(74, 222, 128, 0.1)";
         targetTime.style.color = "var(--triage-green)";
         targetTime.style.borderColor = "rgba(74, 222, 128, 0.2)";
 
         const actions = [
-            "Explicar de forma empática al paciente su nivel de triage y el tiempo estimado.",
-            "Direccionar de forma segura a consulta médica externa o atención primaria.",
-            "Entregar folleto instructivo clínico de cuidados generales.",
-            "No requiere canalización de vías ni toma de muestras urgentes."
+            "Redireccionar el flujo de atención del paciente hacia la sala de consulta externa o general.",
+            "Proporcionar folleto instructivo sobre pautas de alarma clínica en el hogar.",
+            "Controlar signos vitales básicos antes de que abandone la sala de espera.",
+            "No requiere canalización de vías intravenosas de urgencia."
         ];
         actions.forEach(act => {
             const li = document.createElement('li');
             li.textContent = act;
             actionsList.appendChild(li);
         });
-        alarmBox.innerHTML = "<strong>PREVENCIÓN:</strong> Dar indicaciones de regresar a urgencias únicamente si desarrolla fiebre incontrolable, vómitos repetitivos o disnea.";
+        alarmBox.innerHTML = "<strong>NOTA:</strong> Instruir al paciente para regresar inmediatamente a urgencias únicamente si desarrolla fiebre > 38.5°C o dificultad para respirar.";
         alarmBox.style.backgroundColor = "var(--alarm-green-bg)";
         alarmBox.style.color = "var(--alarm-green-text)";
         alarmBox.style.borderColor = "var(--alarm-green-border)";
+
+    } else { // default
+        priorityIcon.textContent = "🟡";
+        title.textContent = "Protocolo Inespecífico - Código Amarillo (Urgente)";
+        targetTime.textContent = "Nivel III - AMARILLO (Urgente, < 60 min)";
+        targetTime.style.backgroundColor = "rgba(250, 204, 21, 0.1)";
+        targetTime.style.color = "var(--triage-yellow)";
+        targetTime.style.borderColor = "rgba(250, 204, 21, 0.2)";
+
+        const actions = [
+            "Asignar un box de atención prioritario para evaluación clínica presencial completa.",
+            "Establecer la toma y reevaluación de constantes vitales en un lapso no mayor a 30 minutos.",
+            "Iniciar vigilancia activa ante la aparición de signos focalizados de sospecha diagnóstica.",
+            "Ofrecer analgésicos suaves según indicación médica inicial en box."
+        ];
+        actions.forEach(act => {
+            const li = document.createElement('li');
+            li.textContent = act;
+            actionsList.appendChild(li);
+        });
+        alarmBox.innerHTML = "<strong>ALERTA:</strong> Reevaluar inmediatamente si el paciente reporta empeoramiento severo de síntomas o dolor agudo difuso.";
+        alarmBox.style.backgroundColor = "var(--alarm-yellow-bg)";
+        alarmBox.style.color = "var(--alarm-yellow-text)";
+        alarmBox.style.borderColor = "var(--alarm-yellow-border)";
     }
 
     modal.classList.remove('hidden');
@@ -588,9 +709,6 @@ function closeRecommendations() {
     document.getElementById('recommendations-modal').classList.add('hidden');
 }
 
-/**
- * Cierra el modal al hacer click en el overlay oscuro exterior
- */
 function closeRecommendationsOnOverlay(event) {
     if (event.target === document.getElementById('recommendations-modal')) {
         closeRecommendations();
@@ -598,7 +716,7 @@ function closeRecommendationsOnOverlay(event) {
 }
 
 /**
- * Contrae o despliega la lógica de inferencia
+ * Despliega o contrae el código de inferencia
  */
 function toggleRulesUsed() {
     const content = document.getElementById('rules-content');
@@ -618,7 +736,7 @@ function toggleRulesUsed() {
    ========================================================================== */
 
 /**
- * Guarda un caso de Triage en LocalStorage y actualiza el badge e historial
+ * Guarda un caso de Triage en LocalStorage
  */
 function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts) {
     let history = [];
@@ -639,14 +757,14 @@ function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts) 
         facts: facts
     };
 
-    history.unshift(newCase); // Añadir al inicio del arreglo
+    history.unshift(newCase);
     localStorage.setItem('triageHistory', JSON.stringify(history));
 
     updateHistoryBadge();
 }
 
 /**
- * Actualiza el contador circular de la pestaña de historial
+ * Actualiza el badge dinámico de historial
  */
 function updateHistoryBadge() {
     const badge = document.getElementById('history-badge');
@@ -679,10 +797,8 @@ function renderHistory() {
         history = [];
     }
 
-    // Limpiar vista
     listView.innerHTML = "";
 
-    // Filtrar por búsqueda si es aplicable
     const filteredHistory = history.filter(item => {
         return item.name.toLowerCase().includes(searchVal) || item.resultText.toLowerCase().includes(searchVal);
     });
@@ -702,28 +818,30 @@ function renderHistory() {
     }
 
     filteredHistory.forEach(item => {
-        // Crear tarjeta de historial
         const card = document.createElement('div');
         card.className = "history-card";
         card.style.borderLeftColor = item.colorVar;
 
-        // Truncar diagnóstico largo
         const shortDiag = item.diagnosis.length > 105 ? item.diagnosis.substring(0, 105) + "..." : item.diagnosis;
 
-        // Generar dynamic symptom pills
+        // Generar dynamic symptom pills para auditoría
         let symptomPills = [];
         if (item.facts) {
             if (item.facts.conciencia === 'confuso') symptomPills.push('🧠 Confuso');
             if (item.facts.conciencia === 'inconsciente') symptomPills.push('🧠 Inconsciente');
             if (item.facts.equilibrio === 'perdida') symptomPills.push('👁️ ACV Alert');
-            if (item.facts.respiracion === 'si') symptomPills.push('🚨 Resp. Severa');
-            if (item.facts.temperatura === 'fiebre') symptomPills.push('🔥 Fiebre');
-            if (item.facts.presion === 'alta') symptomPills.push('📈 P. Alta');
-            if (item.facts.presion === 'baja') symptomPills.push('📉 P. Baja');
+            if (item.facts.dificultad_respiratoria === true) symptomPills.push('🚨 Resp. Severa');
+            if (item.facts.presion_sistolica < 90) symptomPills.push('📉 P. Baja');
+            if (item.facts.presion_sistolica > 160) symptomPills.push('📈 P. Alta');
+            if (item.facts.temperatura > 38.0) symptomPills.push('🔥 Fiebre');
+            if (item.facts.saturacion_o2 < 95) symptomPills.push('🩸 SpO2 Baja');
+            if (item.facts.frecuencia_cardiaca > 120) symptomPills.push('🫀 Taquicardia');
+            if (item.facts.escala_dolor > 7) symptomPills.push('💔 Dolor Severo');
             if (item.facts.dolor_pecho === 'si') symptomPills.push('💔 Dolor Pecho');
             if (item.facts.tos === 'seca') symptomPills.push('😷 Tos Seca');
             if (item.facts.tos === 'flema') symptomPills.push('🤢 Tos Flema');
-            if (item.facts.digestivo === 'nauseas') symptomPills.push('🤢 Digestivo');
+            if (item.facts.sintomas_digestivos === 'nauseas') symptomPills.push('🤢 Náuseas/Vómitos');
+            if (item.facts.sintomas_digestivos === 'vomitos') symptomPills.push('🤮 Vómitos');
         }
         
         const pillsHtml = symptomPills.map(p => `<span class="h-symptom-pill">${p}</span>`).join(' ');
