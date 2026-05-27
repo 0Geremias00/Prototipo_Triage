@@ -736,6 +736,140 @@ function calculateNEWS2(facts) {
 }
 
 /**
+ * Genera un reporte de análisis clínico sumamente rico y detallado para el CDSS,
+ * aportando pautas específicas de acción, resúmenes de vitales y observaciones pediátrico/geriátricas.
+ */
+function generateDetailedAnalysis(conclusion, facts) {
+    const isPediatric = facts.edad === 'pediatrico';
+    const isElderly = facts.edad === 'adulto_mayor';
+    
+    let vitalsSummary = `
+        <div class="analysis-vitals-summary" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 0.8rem; font-size: 0.82rem; text-align: left; opacity: 0.95;">
+            <div style="background: rgba(255,255,255,0.03); padding: 0.5rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">🩸 <strong>SpO2:</strong> ${facts.saturacion_o2}% (${facts.saturacion_o2 < 90 ? 'Hipoxia Crítica' : facts.saturacion_o2 < 95 ? 'Hipoxia Leve' : 'Normal'})</div>
+            <div style="background: rgba(255,255,255,0.03); padding: 0.5rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">🫀 <strong>FC:</strong> ${facts.frecuencia_cardiaca} lpm (${facts.frecuencia_cardiaca > (isPediatric ? 120 : 100) ? 'Taquicardia' : facts.frecuencia_cardiaca < (isPediatric ? 70 : 60) ? 'Bradicardia' : 'Normal'})</div>
+            <div style="background: rgba(255,255,255,0.03); padding: 0.5rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">📉 <strong>P. Sistólica:</strong> ${facts.presion_sistolica} mmHg</div>
+            <div style="background: rgba(255,255,255,0.03); padding: 0.5rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">🔥 <strong>Temp:</strong> ${facts.temperatura}°C (${facts.temperatura > 38.0 ? 'Hipertermia / Fiebre' : facts.temperatura < 35.0 ? 'Hipotermia' : 'Afebril'})</div>
+        </div>
+    `;
+
+    let guidanceHtml = "";
+    if (conclusion.code === "acv") {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: var(--triage-red); font-weight: 700;">🧠 DIRECTRICES CÓDIGO ICTUS (ACV):</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Tiempo es Cerebro:</strong> Cada minuto de retraso destruye millones de neuronas.</li>
+                    <li><strong>Acción:</strong> Prioridad absoluta para Tomografía Computarizada (TAC) sin contraste.</li>
+                    <li><strong>Fármacos:</strong> Evaluar criterios de exclusión para fibrinólisis si inicio de síntomas es < 4.5 horas.</li>
+                    <li><strong>Posición:</strong> Cabecera a 30 grados para mitigar presión intracraneana.</li>
+                </ul>
+            </div>
+        `;
+    } else if (conclusion.code === "iam") {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: var(--triage-red); font-weight: 700;">💔 DIRECTRICES CÓDIGO INFARTO (IAM):</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Electrocardiograma:</strong> Debe realizarse e interpretarse en menos de 10 minutos.</li>
+                    <li><strong>Terapia Antiagregante:</strong> Administrar Ácido Acetilsalicílico (AAS) 300 mg masticable si está indicado.</li>
+                    <li><strong>Monitorización:</strong> Riesgo extremo de fibrilación ventricular. Desfibrilador al costado del paciente.</li>
+                    <li><strong>Oxigenoterapia:</strong> Reservado únicamente si SpO2 < 94% para mitigar vasoconstricción coronaria.</li>
+                </ul>
+            </div>
+        `;
+    } else if (conclusion.code === "sepsis") {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: var(--triage-orange); font-weight: 700;">🫀 DIRECTRICES DE SHOCK / CÓDIGO SEPSIS:</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Campaña Sobrevivir a la Sepsis:</strong> Medición de Lactato en sangre de inmediato.</li>
+                    <li><strong>Hemocultivos:</strong> Tomar muestras microbiológicas antes del inicio de antibióticos.</li>
+                    <li><strong>Antibioterapia:</strong> Administrar antibióticos de amplio espectro en la primera hora.</li>
+                    <li><strong>Volumen:</strong> Iniciar rehidratación agresiva con cristaloides (30 ml/kg) si hipotensión severa.</li>
+                </ul>
+            </div>
+        `;
+    } else if (conclusion.code === "trauma_critico" || conclusion.code === "trauma_moderado") {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: ${conclusion.color === 'var(--triage-red)' ? 'var(--triage-red)' : 'var(--triage-yellow)'}; font-weight: 700;">🦴 DIRECTRICES PARA CONTROL DE TRAUMA:</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Control Hemorrágico:</strong> Presión directa o torniquete arterial inmediato si hay sangrado activo masivo.</li>
+                    <li><strong>Inmovilización:</strong> Mantener alineación y entablillado de extremidades afectadas para prevenir daño vascular.</li>
+                    <li><strong>Perfusión Distal:</strong> Evaluar pulsos y llenado capilar distal cada 15 minutos en el miembro afectado.</li>
+                    <li><strong>Analgesia prioritaria:</strong> Controlar dolor EVA para mitigar el shock neurogénico.</li>
+                </ul>
+            </div>
+        `;
+    } else if (conclusion.code === "obstetrico_critico" || conclusion.code === "obstetrico_moderado") {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: ${conclusion.color === 'var(--triage-red)' ? 'var(--triage-red)' : 'var(--triage-yellow)'}; font-weight: 700;">🤰 DIRECTRICES CÓDIGO ROJO OBSTÉTRICO:</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Sangrado Obstétrico:</strong> Activar protocolo de Código Rojo. Canalizar doble vía venosa gruesa (14G o 16G).</li>
+                    <li><strong>Posición:</strong> Colocar a la gestante en decúbito lateral izquierdo para descomprimir la vena cava inferior.</li>
+                    <li><strong>Eclampsia:</strong> Administrar Sulfato de Magnesio IV según protocolo de impregnación ante crisis convulsiva.</li>
+                    <li><strong>Bienestar Fetal:</strong> Monitoreo continuo de latidos cardíacos fetales.</li>
+                </ul>
+            </div>
+        `;
+    } else if (conclusion.code === "pediatria_severo" || conclusion.code === "pediatria_moderado") {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: ${conclusion.color === 'var(--triage-orange)' ? 'var(--triage-orange)' : 'var(--triage-yellow)'}; font-weight: 700;">👶 GUÍA DE INTERVENCIÓN PEDIÁTRICA:</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Hidratación Oral:</strong> Iniciar de inmediato si tolera la vía oral (sales de rehidratación oral fraccionadas en cucharaditas).</li>
+                    <li><strong>Acceso Intravenoso:</strong> Si hay letargia o signo de pliegue persistente, colocar acceso IV periférico o intraóseo de urgencia.</li>
+                    <li><strong>Vigilancia:</strong> Evaluar diuresis (pañales mojados), fontanela hundida y presencia de lágrimas al llorar.</li>
+                </ul>
+            </div>
+        `;
+    } else {
+        guidanceHtml = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; text-align: left; font-size: 0.85rem;">
+                <h4 style="color: var(--primary-color); font-weight: 700;">📋 DIRECTRICES GENERALES DE ESTABILIZACIÓN:</h4>
+                <ul style="margin-left: 1.2rem; margin-top: 0.4rem; list-style-type: square; line-height: 1.45;">
+                    <li><strong>Vigilancia:</strong> Monitorear signos vitales cada 30 minutos mientras permanece en sala de espera.</li>
+                    <li><strong>Escala de Dolor:</strong> Administrar analgésicos indicados para reducir el dolor reportado en escala EVA.</li>
+                    <li><strong>Educación al Paciente:</strong> Explicar los tiempos objetivos de espera y las pautas de alarma.</li>
+                </ul>
+            </div>
+        `;
+    }
+
+    let notesHtml = "";
+    if (isPediatric) {
+        notesHtml = `
+            <div style="margin-top: 0.8rem; padding: 0.6rem 0.8rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; text-align: left; font-size: 0.78rem; color: #38bdf8;">
+                ⚠️ <strong>Nota Pediátrica:</strong> Signos vitales calibrados según la escala PEWS de desarrollo fisiológico infantil.
+            </div>
+        `;
+    } else if (isElderly) {
+        notesHtml = `
+            <div style="margin-top: 0.8rem; padding: 0.6rem 0.8rem; background: rgba(251, 146, 60, 0.08); border: 1px solid rgba(251, 146, 60, 0.2); border-radius: 8px; text-align: left; font-size: 0.78rem; color: #fb923c;">
+                👵 <strong>Escalación Geriátrica:</strong> Paciente mayor de 65 años clasificado con vulnerabilidad hemodinámica/térmica activa. Nivel de prioridad incrementado en +1.
+            </div>
+        `;
+    }
+
+    const fullAnalysisHtml = `
+        <div style="padding: 0.4rem 0.2rem;">
+            <h3 style="font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem; text-align: left; display: flex; align-items: center; gap: 0.4rem;">
+                🩺 Análisis Clínico Integrado
+            </h3>
+            <p style="font-size: 0.88rem; font-weight: 600; text-align: left; margin-top: 0.8rem; line-height: 1.4;">
+                ${conclusion.diagnosis}
+            </p>
+            ${vitalsSummary}
+            ${notesHtml}
+            ${guidanceHtml}
+        </div>
+    `;
+    
+    return fullAnalysisHtml;
+}
+
+/**
  * Concluye la evaluación de triage clínica
  */
 function finalizeTriageEvaluation(patientName, facts) {
@@ -841,9 +975,14 @@ function finalizeTriageEvaluation(patientName, facts) {
     }
 
     const diagnosisBox = document.getElementById('disease-diagnosis');
-    diagnosisBox.innerHTML = conclusion.diagnosis;
+    diagnosisBox.innerHTML = generateDetailedAnalysis(conclusion, facts);
     diagnosisBox.style.borderLeftColor = conclusion.color;
-    diagnosisBox.style.color = conclusion.color;
+    
+    // Configuración estética y visual del reporte integrado
+    diagnosisBox.style.color = "#ffffff";
+    diagnosisBox.style.background = "rgba(0,0,0,0.35)";
+    diagnosisBox.style.borderLeftWidth = "6px";
+    diagnosisBox.style.padding = "1.2rem 1.5rem";
 
     document.getElementById('rule-used').textContent = conclusion.ruleApplied;
 
