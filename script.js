@@ -201,6 +201,18 @@ class TriageInferenceEngine {
     }
 }
 
+// Utility to get user friendly label for requested area
+function getAreaLabel(area) {
+    const mapping = {
+        'urgencias': '🏥 Urgencias',
+        'general': '🩺 Medicina General',
+        'pediatria': '👶 Pediatría',
+        'trauma': '🦴 Traumatología',
+        'gineco': '🤰 Ginecología'
+    };
+    return mapping[area] || area || 'No especificada';
+}
+
 // Variables globales para almacenar el triage activo actual
 let currentTriageColor = "var(--primary-color)";
 let currentTriageText = "PRIORIDAD V - VERDE";
@@ -354,6 +366,7 @@ function nextStep(current, next) {
 function evaluateTriage() {
     const patientName = document.getElementById('paciente-nombre').value.trim() || "Paciente Anónimo";
     const facts = {
+        area_solicitada: document.getElementById('area_solicitada').value,
         conciencia: document.getElementById('conciencia').value,
         equilibrio: document.getElementById('equilibrio').value,
         presion_sistolica: parseInt(document.getElementById('presion_sistolica').value),
@@ -415,12 +428,52 @@ function finalizeTriageEvaluation(patientName, facts) {
     currentTriageText = conclusion.level;
     currentTriageCode = conclusion.code;
 
+    // --- DYNAMIC CLINICAL ROUTING (Sistemas de Conocimiento) ---
+    let assignedArea = "";
+    
+    // Si es Rojo (Nivel I) -> Siempre Box de Reanimación
+    if (conclusion.level.includes("ROJO")) {
+        assignedArea = "🚨 Box de Reanimación / Shock-Trauma (Urgencias Críticas)";
+    } 
+    // Si es Naranja (Nivel II) -> Siempre Box de Observación de Urgencias
+    else if (conclusion.level.includes("NARANJA")) {
+        assignedArea = "🏥 Box de Observación / Urgencias Especiales";
+    } 
+    // Si es Amarillo (Nivel III / Urgente) -> Depende de la solicitud
+    else if (conclusion.level.includes("AMARILLO")) {
+        if (facts.area_solicitada === "gineco") {
+            assignedArea = "🤰 Box de Urgencias Gineco-Obstétricas";
+        } else if (facts.area_solicitada === "pediatria") {
+            assignedArea = "👶 Box de Urgencias Pediátricas";
+        } else if (facts.area_solicitada === "trauma") {
+            assignedArea = "🦴 Box de Traumatología (Urgencias)";
+        } else {
+            assignedArea = "🏥 Box de Consulta Rápida (Urgencias)";
+        }
+    } 
+    // Si es Verde (Nivel IV / Consulta) -> Derivación externa según solicitud
+    else {
+        if (facts.area_solicitada === "gineco") {
+            assignedArea = "🤰 Consulta Externa de Ginecología";
+        } else if (facts.area_solicitada === "pediatria") {
+            assignedArea = "👶 Consulta Externa de Pediatría";
+        } else if (facts.area_solicitada === "trauma") {
+            assignedArea = "🦴 Consulta Externa de Traumatología";
+        } else if (facts.area_solicitada === "general") {
+            assignedArea = "🩺 Consulta Externa de Medicina General";
+        } else {
+            assignedArea = "🩺 Consulta Médica General Programada";
+        }
+    }
+
     // UI Update - Cambiar de pantallas
     document.getElementById('wizard-container').classList.add('hidden');
     document.getElementById('result-container').classList.remove('hidden');
 
     // Actualizar datos de resultado en pantalla
     document.getElementById('result-patient-name').innerHTML = `Paciente: <span>${patientName}</span>`;
+    document.getElementById('result-requested-area').innerHTML = `Área Solicitada: <span>${getAreaLabel(facts.area_solicitada)}</span>`;
+    document.getElementById('result-assigned-area').innerHTML = `Área Asignada: <span>${assignedArea}</span>`;
 
     const resultBox = document.getElementById('triage-result');
     resultBox.textContent = conclusion.level;
@@ -462,7 +515,7 @@ function finalizeTriageEvaluation(patientName, facts) {
     AudioFX.playSuccess();
 
     // Guardar en base de datos local
-    saveTriageCase(patientName, conclusion.level, conclusion.color, conclusion.diagnosis, conclusion.ruleApplied, facts);
+    saveTriageCase(patientName, conclusion.level, conclusion.color, conclusion.diagnosis, conclusion.ruleApplied, facts, assignedArea);
 }
 
 /**
@@ -738,7 +791,7 @@ function toggleRulesUsed() {
 /**
  * Guarda un caso de Triage en LocalStorage
  */
-function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts) {
+function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts, assignedArea) {
     let history = [];
     try {
         history = JSON.parse(localStorage.getItem('triageHistory')) || [];
@@ -754,7 +807,8 @@ function saveTriageCase(name, resultText, colorVar, diagnosis, ruleUsed, facts) 
         diagnosis: diagnosis,
         ruleUsed: ruleUsed,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        facts: facts
+        facts: facts,
+        assignedArea: assignedArea
     };
 
     history.unshift(newCase);
@@ -844,6 +898,9 @@ function renderHistory() {
             if (item.facts.sintomas_digestivos === 'vomitos') symptomPills.push('🤮 Vómitos');
         }
         
+        const reqArea = item.facts ? getAreaLabel(item.facts.area_solicitada) : 'No especificada';
+        const asgArea = item.assignedArea || (item.resultText.includes("ROJO") ? "🚨 Box de Reanimación / Shock-Trauma (Urgencias Críticas)" : item.resultText.includes("NARANJA") ? "🏥 Box de Observación / Urgencias Especiales" : "🩺 Box / Consulta programada");
+        
         const pillsHtml = symptomPills.map(p => `<span class="h-symptom-pill">${p}</span>`).join(' ');
 
         card.innerHTML = `
@@ -851,6 +908,10 @@ function renderHistory() {
                 <span class="h-name">${item.name}</span>
                 <span class="h-diag">${shortDiag}</span>
                 <div class="h-symptom-container">${pillsHtml}</div>
+                <div class="h-areas-container">
+                    <span class="h-area-tag requested" title="Área solicitada por el paciente">📋 Solicitó: <strong>${reqArea}</strong></span>
+                    <span class="h-area-tag assigned" title="Área asignada por el motor experto">📍 Asignado: <strong>${asgArea}</strong></span>
+                </div>
                 <span class="h-time">🕒 Evaluado a las: ${item.time}</span>
             </div>
             <div class="history-card-right">

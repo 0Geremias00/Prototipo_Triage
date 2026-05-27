@@ -88,6 +88,44 @@
                         </div>
                     </div>
                     
+                    <!-- Área de Atención Solicitada -->
+                    <div class="form-group">
+                        <label>Área de Destino Solicitada</label>
+                        <div class="option-cards-group area-cards-grid" data-input-id="area_solicitada">
+                            <div class="option-card" data-value="urgencias" style="padding: 0.8rem 1rem;">
+                                <span class="card-icon" style="font-size: 1.2rem;">🏥</span>
+                                <div class="card-text">
+                                    <span class="card-title" style="font-size: 0.85rem;">Urgencias</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="general" style="padding: 0.8rem 1rem;">
+                                <span class="card-icon" style="font-size: 1.2rem;">🩺</span>
+                                <div class="card-text">
+                                    <span class="card-title" style="font-size: 0.85rem;">Med. General</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="pediatria" style="padding: 0.8rem 1rem;">
+                                <span class="card-icon" style="font-size: 1.2rem;">👶</span>
+                                <div class="card-text">
+                                    <span class="card-title" style="font-size: 0.85rem;">Pediatría</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="trauma" style="padding: 0.8rem 1rem;">
+                                <span class="card-icon" style="font-size: 1.2rem;">🦴</span>
+                                <div class="card-text">
+                                    <span class="card-title" style="font-size: 0.85rem;">Trauma</span>
+                                </div>
+                            </div>
+                            <div class="option-card" data-value="gineco" style="padding: 0.8rem 1rem;">
+                                <span class="card-icon" style="font-size: 1.2rem;">🤰</span>
+                                <div class="card-text">
+                                    <span class="card-title" style="font-size: 0.85rem;">Ginecología</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="area_solicitada" required>
+                    </div>
+                    
                     <!-- Estado de Conciencia -->
                     <div class="form-group">
                         <label>Estado de Conciencia</label>
@@ -355,6 +393,8 @@
                 </div>
                 <h2>Análisis de Triage Completado</h2>
                 <div class="patient-result-tag" id="result-patient-name">Paciente: <span>Juan Pérez</span></div>
+                <div class="patient-result-tag" id="result-requested-area" style="margin-top: 0.5rem; background: rgba(167, 139, 250, 0.08); border-color: rgba(167, 139, 250, 0.2);">Área Solicitada: <span>Medicina General</span></div>
+                <div class="patient-result-tag" id="result-assigned-area" style="margin-top: 0.5rem; background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.2);">Área Asignada: <span>Box de Reanimación (Urgencias)</span></div>
             </div>
             
             <!-- Dynamic Glowing Triage Card -->

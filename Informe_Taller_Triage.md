@@ -104,6 +104,24 @@ El motor experto evalúa de forma descendente las siguientes reglas de manera in
 * **Inferencia por Encadenamiento hacia Adelante (Forward Chaining):** El motor parte de los hechos ingresados en la interfaz de usuario. Al presionar diagnosticar, el motor experto compara el vector de hechos fisiológicos recolectados con las condiciones clínicas lógicas `IF` en su base de conocimiento. En cuanto hace match con una de las premisas, infiere en milisegundos las conclusiones asignando el color de triage y el diagnóstico explicable.
 * **Toma de Decisiones de Priorización Jerárquica:** El sistema procesa las reglas en orden estricto de gravedad biológica descendente. Evalúa primero las sospechas críticas cardíacas y neurológicas (ACV e IAM en Código Rojo). Si se detecta un Código Rojo, el motor interrumpe la evaluación de prioridad menor y emite de inmediato la alerta máxima. Esto garantiza que un paciente en paro respiratorio o infarto sea clasificado al instante, eliminando retrasos críticos.
 
+### 4. Matriz de Direccionamiento y Ruteo Clínico Inteligente (Sistemas de Conocimiento)
+Para optimizar el flujo de pacientes y maximizar la eficiencia hospitalaria, el sistema incorpora una **Matriz de Ruteo Inteligente**. Al ingresar al flujo, el paciente o enfermero selecciona el área de atención que solicita (Urgencias, Medicina General, Pediatría, Traumatología o Ginecología) y la lógica basada en conocimiento cruza la gravedad de la prioridad para determinar el destino físico exacto dentro del hospital:
+
+| Nivel de Triage (Gravedad) | Área Solicitada | Área Física Asignada en Destino | Justificación Clínica / Operativa |
+| :--- | :--- | :--- | :--- |
+| **I - ROJO (Crítico)** | Cualquiera | **🚨 Box de Reanimación / Shock-Trauma (Urgencias Críticas)** | Prioridad vital máxima. Se ignoran solicitudes externas para salvar la vida en sala especializada. |
+| **II - NARANJA (Muy Urgente)** | Cualquiera | **🏥 Box de Observación / Urgencias Especiales** | Alto riesgo de deterioro hemodinámico inminente. Monitoreo constante obligatorio. |
+| **III - AMARILLO (Urgente)** | Ginecología | **🤰 Box de Urgencias Gineco-Obstétricas** | Derivación oportuna a sala con equipamiento ginecológico y obstetra de guardia. |
+| **III - AMARILLO (Urgente)** | Pediatría | **👶 Box de Urgencias Pediátricas** | Aislamiento y atención pediátrica especializada para evitar sobrecarga y contagios en adultos. |
+| **III - AMARILLO (Urgente)** | Traumatología | **🦴 Box de Traumatología (Urgencias)** | Destinado a inmovilización física de urgencia, suturas y control del dolor agudo. |
+| **III - AMARILLO (Urgente)** | Medicina General / Urgencias | **🏥 Box de Consulta Rápida (Urgencias)** | Atención rápida presencial por médico de urgencias generales. |
+| **IV - VERDE (Estable)** | Ginecología | **🤰 Consulta Externa de Ginecología** | Paciente estable. Se libera cupo de urgencia y se direcciona a consulta programada. |
+| **IV - VERDE (Estable)** | Pediatría | **👶 Consulta Externa de Pediatría** | Paciente pediátrico estable. Atención por agenda ambulatoria de pediatría. |
+| **IV - VERDE (Estable)** | Traumatología | **🦴 Consulta Externa de Traumatología** | Paciente estable con dolor leve o traumatismo crónico. Agendamiento externo. |
+| **IV - VERDE (Estable)** | Medicina General | **🩺 Consulta Externa de Medicina General** | Paciente estable. Consulta regular programada para optimizar los boxes críticos. |
+
+Esta integración es visible en la interfaz en tiempo real, mostrándose tanto en la **pantalla de diagnóstico final** como en el **dashboard de historial clínico local** mediante badges estructuradas HSL que ayudan al enfermero a auditar ágilmente el flujo del turno.
+
 ```mermaid
 graph TD
     A[Inicio: Ingresar Hechos Sintomáticos] --> B{¿Equilibrio Repentino Perdido & Conciencia Confuso/Inconsciente?}

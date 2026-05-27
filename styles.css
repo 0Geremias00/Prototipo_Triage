@@ -1464,6 +1464,53 @@ body, header, main, section, .glass-panel, input, button, .option-card, .tab-btn
     color: var(--text-muted);
 }
 
+/* History Areas Pills styling */
+.h-areas-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.35rem 0;
+}
+
+.h-area-tag {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    line-height: 1.25;
+}
+
+.h-area-tag strong {
+    font-weight: 700;
+}
+
+.h-area-tag.requested {
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.15);
+    color: #c084fc;
+}
+
+.h-area-tag.assigned {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+.light-theme .h-area-tag.requested {
+    background: rgba(124, 58, 237, 0.06);
+    border-color: rgba(124, 58, 237, 0.12);
+    color: #6d28d9;
+}
+
+.light-theme .h-area-tag.assigned {
+    background: rgba(37, 99, 235, 0.06);
+    border-color: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+}
+
 /* Premium Vitals Input Fields Grid & Styling */
 .vitals-grid {
     display: grid;
@@ -1538,4 +1585,23 @@ body, header, main, section, .glass-panel, input, button, .option-card, .tab-btn
     background-color: rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15),
                 inset 0 2px 4px rgba(15, 23, 42, 0.02);
+}
+
+/* Premium Clinical Area Grid Layout */
+.area-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    width: 100%;
+}
+
+@media (max-width: 550px) {
+    .area-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 380px) {
+    .area-cards-grid {
+        grid-template-columns: 1fr;
+    }
 }
