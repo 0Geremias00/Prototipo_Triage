@@ -1365,7 +1365,7 @@ function toggleTheme() {
 }
 
 /**
- * /* NUEVO */ Controla el temporizador regresivo de re-evaluación clínica en tiempo real (minutos:segundos)
+ * Controla el temporizador regresivo de re-evaluación clínica en tiempo real (minutos:segundos)
  */
 let countdownInterval = null;
 
@@ -1423,7 +1423,7 @@ function startCountdownTimers() {
 }
 
 /**
- * /* NUEVO */ Exporta el historial del turno actual como un archivo CSV estructurado
+ * Exporta el historial del turno actual como un archivo CSV estructurado
  */
 function exportHistoryToCSV() {
     let history = [];
