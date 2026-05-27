@@ -48,6 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Inicializar la Base de Datos Local (Historial)
     updateHistoryBadge();
     renderHistory();
+
+    // 3. Inicializar el botón de cambio de tema
+    const toggleBtn = document.getElementById('theme-toggle-btn');
+    if (toggleBtn) {
+        const isLight = document.documentElement.classList.contains('light-theme');
+        toggleBtn.querySelector('.toggle-icon').textContent = isLight ? '☀️' : '🌙';
+        toggleBtn.addEventListener('click', toggleTheme);
+    }
 });
 
 /**
@@ -377,9 +385,9 @@ function openRecommendations() {
             actionsList.appendChild(li);
         });
         alarmBox.innerHTML = "<strong>CRÍTICO:</strong> Vigilar estrechamente signos de colapso respiratorio, cianosis progresiva, pérdida del pulso periférico y ritmo cardíaco.";
-        alarmBox.style.backgroundColor = "rgba(244, 63, 94, 0.08)";
-        alarmBox.style.color = "#fda4af";
-        alarmBox.style.borderColor = "rgba(244, 63, 94, 0.2)";
+        alarmBox.style.backgroundColor = "var(--alarm-red-bg)";
+        alarmBox.style.color = "var(--alarm-red-text)";
+        alarmBox.style.borderColor = "var(--alarm-red-border)";
 
     } else if (currentTriageColor === "var(--triage-orange)") {
         priorityIcon.textContent = "🔥";
@@ -402,9 +410,9 @@ function openRecommendations() {
             actionsList.appendChild(li);
         });
         alarmBox.innerHTML = "<strong>ALERTA:</strong> Reportar de inmediato si se presenta descompensación neurológica súbita, incremento severo de la disnea o hipotensión progresiva.";
-        alarmBox.style.backgroundColor = "rgba(251, 146, 60, 0.08)";
-        alarmBox.style.color = "#fed7aa";
-        alarmBox.style.borderColor = "rgba(251, 146, 60, 0.2)";
+        alarmBox.style.backgroundColor = "var(--alarm-orange-bg)";
+        alarmBox.style.color = "var(--alarm-orange-text)";
+        alarmBox.style.borderColor = "var(--alarm-orange-border)";
 
     } else if (currentTriageColor === "var(--triage-yellow)") {
         priorityIcon.textContent = "🟡";
@@ -426,9 +434,9 @@ function openRecommendations() {
             actionsList.appendChild(li);
         });
         alarmBox.innerHTML = "<strong>NOTA:</strong> Educar al paciente en sala de espera para alertar si presenta dolor de pecho, asfixia o pérdida de fuerza motriz.";
-        alarmBox.style.backgroundColor = "rgba(250, 204, 21, 0.04)";
-        alarmBox.style.color = "#fef08a";
-        alarmBox.style.borderColor = "rgba(250, 204, 21, 0.1)";
+        alarmBox.style.backgroundColor = "var(--alarm-yellow-bg)";
+        alarmBox.style.color = "var(--alarm-yellow-text)";
+        alarmBox.style.borderColor = "var(--alarm-yellow-border)";
 
     } else { // Verde
         priorityIcon.textContent = "🟢";
@@ -450,9 +458,9 @@ function openRecommendations() {
             actionsList.appendChild(li);
         });
         alarmBox.innerHTML = "<strong>PREVENCIÓN:</strong> Dar indicaciones de regresar a urgencias únicamente si desarrolla fiebre incontrolable, vómitos repetitivos o disnea.";
-        alarmBox.style.backgroundColor = "rgba(74, 222, 128, 0.04)";
-        alarmBox.style.color = "#bbf7d0";
-        alarmBox.style.borderColor = "rgba(74, 222, 128, 0.1)";
+        alarmBox.style.backgroundColor = "var(--alarm-green-bg)";
+        alarmBox.style.color = "var(--alarm-green-text)";
+        alarmBox.style.borderColor = "var(--alarm-green-border)";
     }
 
     modal.classList.remove('hidden');
@@ -631,5 +639,22 @@ function clearHistory() {
         localStorage.removeItem('triageHistory');
         updateHistoryBadge();
         renderHistory();
+    }
+}
+
+/**
+ * Alterna entre el tema claro y el tema oscuro
+ */
+function toggleTheme() {
+    const html = document.documentElement;
+    const toggleBtn = document.getElementById('theme-toggle-btn');
+    const isLight = html.classList.toggle('light-theme');
+    
+    if (isLight) {
+        localStorage.setItem('triageTheme', 'light');
+        if (toggleBtn) toggleBtn.querySelector('.toggle-icon').textContent = '☀️';
+    } else {
+        localStorage.setItem('triageTheme', 'dark');
+        if (toggleBtn) toggleBtn.querySelector('.toggle-icon').textContent = '🌙';
     }
 }

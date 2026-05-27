@@ -28,6 +28,23 @@
     --triage-green-glow: rgba(74, 222, 128, 0.4);
     --triage-blue: #38bdf8;
     --triage-blue-glow: rgba(56, 189, 248, 0.4);
+
+    /* Alarm box - Priority Adapting Variables for Dark Theme */
+    --alarm-red-bg: rgba(244, 63, 94, 0.08);
+    --alarm-red-text: #fda4af;
+    --alarm-red-border: rgba(244, 63, 94, 0.2);
+
+    --alarm-orange-bg: rgba(251, 146, 60, 0.08);
+    --alarm-orange-text: #fed7aa;
+    --alarm-orange-border: rgba(251, 146, 60, 0.2);
+
+    --alarm-yellow-bg: rgba(250, 204, 21, 0.04);
+    --alarm-yellow-text: #fef08a;
+    --alarm-yellow-border: rgba(250, 204, 21, 0.1);
+
+    --alarm-green-bg: rgba(74, 222, 128, 0.04);
+    --alarm-green-text: #bbf7d0;
+    --alarm-green-border: rgba(74, 222, 128, 0.1);
 }
 
 * {
@@ -102,6 +119,7 @@ body {
     max-width: 650px;
     padding: 1.5rem 2rem;
     margin-bottom: 1.5rem;
+    position: relative;
 }
 
 .header-content {
@@ -1092,5 +1110,223 @@ body {
     
     .modal-content {
         padding: 1.5rem;
+    }
+}
+
+/* Premium Interactive Theme Toggle Button Styling */
+.theme-toggle-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 1.25rem;
+    user-select: none;
+    outline: none;
+    z-index: 10;
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.08) rotate(15deg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* Premium Light Theme Override */
+.light-theme {
+    --bg-dark: #f1f5f9; /* Slate 100 - soft cool gray */
+    --text-main: #0f172a; /* Slate 900 */
+    --text-muted: #475569; /* Slate 600 */
+    --text-inactive: #94a3b8; /* Slate 400 */
+    --border-glass: rgba(15, 23, 42, 0.08);
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --secondary-color: rgba(15, 23, 42, 0.05);
+    --secondary-hover: rgba(15, 23, 42, 0.1);
+    
+    /* Solid High-Legibility Triage Colors for Light Background */
+    --triage-red: #e11d48; /* deep rose-600 */
+    --triage-red-glow: rgba(225, 29, 72, 0.2);
+    --triage-orange: #ea580c; /* orange-600 */
+    --triage-orange-glow: rgba(234, 88, 12, 0.2);
+    --triage-yellow: #b45309; /* amber-700 for perfect contrast on light bg */
+    --triage-yellow-glow: rgba(180, 83, 9, 0.2);
+    --triage-green: #15803d; /* green-700 */
+    --triage-green-glow: rgba(21, 128, 61, 0.2);
+    --triage-blue: #0369a1; /* sky-700 */
+    --triage-blue-glow: rgba(3, 105, 161, 0.2);
+
+    /* Alarm box - Priority Adapting Variables for Light Theme */
+    --alarm-red-bg: rgba(225, 29, 72, 0.08);
+    --alarm-red-text: #be123c;
+    --alarm-red-border: rgba(225, 29, 72, 0.2);
+
+    /* Alarm box - Orange */
+    --alarm-orange-bg: rgba(234, 88, 12, 0.08);
+    --alarm-orange-text: #c2410c;
+    --alarm-orange-border: rgba(234, 88, 12, 0.2);
+
+    /* Alarm box - Yellow */
+    --alarm-yellow-bg: rgba(180, 83, 9, 0.06);
+    --alarm-yellow-text: #92400e;
+    --alarm-yellow-border: rgba(180, 83, 9, 0.15);
+
+    /* Alarm box - Green */
+    --alarm-green-bg: rgba(21, 128, 61, 0.06);
+    --alarm-green-text: #166534;
+    --alarm-green-border: rgba(21, 128, 61, 0.15);
+}
+
+/* Light Theme Component Specific Overrides */
+.light-theme .bg-blur {
+    opacity: 0.15;
+}
+
+.light-theme .glass-panel {
+    box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.1),
+                inset 0 1px 0px rgba(255, 255, 255, 0.8);
+}
+
+.light-theme .tab-btn.active {
+    background: rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.05),
+                inset 0 1px 0px rgba(255, 255, 255, 0.8);
+    border: 1.5px solid rgba(15, 23, 42, 0.03);
+}
+
+.light-theme .tab-btn:hover {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+.light-theme .step h2 {
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.light-theme #paciente-nombre {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid rgba(15, 23, 42, 0.08);
+    box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+.light-theme #paciente-nombre:focus {
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15),
+                inset 0 2px 4px rgba(15, 23, 42, 0.02);
+}
+
+.light-theme .option-card {
+    background: rgba(15, 23, 42, 0.015);
+    border: 1.5px solid rgba(15, 23, 42, 0.04);
+}
+
+.light-theme .option-card:hover {
+    background: rgba(15, 23, 42, 0.035);
+    border-color: rgba(15, 23, 42, 0.15);
+    box-shadow: 0 8px 20px -8px rgba(15, 23, 42, 0.08);
+}
+
+.light-theme .option-cards-group[data-input-id="conciencia"] .option-card[data-value="alerta"].selected {
+    background: rgba(21, 128, 61, 0.08);
+}
+
+.light-theme .option-cards-group[data-input-id="conciencia"] .option-card[data-value="confuso"].selected {
+    background: rgba(180, 83, 9, 0.08);
+}
+
+.light-theme .option-cards-group[data-input-id="conciencia"] .option-card[data-value="inconsciente"].selected {
+    background: rgba(225, 29, 72, 0.08);
+}
+
+.light-theme .option-card.selected {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.light-theme .option-card.warning-card.selected {
+    background: rgba(234, 88, 12, 0.08);
+}
+
+.light-theme .option-card.hazard-card.selected {
+    background: rgba(225, 29, 72, 0.08);
+}
+
+.light-theme .disease-box {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+.light-theme .rules-content-body code {
+    background: rgba(15, 23, 42, 0.04);
+    color: #7c3aed;
+}
+
+.light-theme #history-search {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid rgba(15, 23, 42, 0.08);
+}
+
+.light-theme #history-search:focus {
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.light-theme .empty-state {
+    border: 1.5px dashed rgba(15, 23, 42, 0.08);
+}
+
+.light-theme .history-card {
+    background: rgba(15, 23, 42, 0.01);
+    border: 1.5px solid rgba(15, 23, 42, 0.04);
+}
+
+.light-theme .history-card:hover {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+.light-theme .modal-icon {
+    background: rgba(15, 23, 42, 0.03);
+    border: 1.5px solid rgba(15, 23, 42, 0.08);
+}
+
+.light-theme .history-list::-webkit-scrollbar-track, 
+.light-theme .rules-content-body code::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.light-theme .history-list::-webkit-scrollbar-thumb, 
+.light-theme .rules-content-body code::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .theme-toggle-btn {
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.light-theme .theme-toggle-btn:hover {
+    background: rgba(15, 23, 42, 0.08);
+    border-color: rgba(15, 23, 42, 0.15);
+}
+
+/* Responsiveness adjustments for toggle button */
+@media (max-width: 600px) {
+    .theme-toggle-btn {
+        top: 1.25rem;
+        right: 1.25rem;
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
     }
 }
